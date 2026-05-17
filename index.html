@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script src="https://telegram.org/js/telegram-web-app.js"></script>
+	<meta charset="UTF-8">    
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">    
+	<title>Y - Ваш ключ от будущего!</title>
+	<link rel="stylesheet" href="miniapp.css" type="text/css" media="all">
+</head>
+	
+<body>
+
+	<script>
+		// Функция обновления отображения выбранного варианта программ
+		function updateSelectedProgram() {
+		  const select = document.getElementById('card_programs');
+		  const selectedIndex = select.selectedIndex;
+		  const displayElement = document.getElementById('selected_program');
+
+		  if (selectedIndex > 0) { // Пропускаем первую опцию («Выберите...»)
+			const selectedOption = select.options[selectedIndex];
+			displayElement.textContent = selectedOption.textContent;
+		  } else {
+			displayElement.textContent = 'Ничего не выбрано';
+		  }
+		}	
+	
+		// Загрузить контент из файла JSON
+		fetch('content.json')
+ 			.then(response => response.json())
+  			.then(jsonData => {
+				let data = jsonData;
+				//document.getElementById('txt1').innerHTML = d_text[1];
+				//document.getElementById('txt2').innerHTML = d_text[2];
+				document.getElementById('txt3').innerHTML = data[3];
+				//document.getElementById('txt4').innerHTML = d_text[4];
+				//document.getElementById('txt5').innerHTML = d_text[5];
+				document.getElementById('txt6').innerHTML = data[6];
+				document.getElementById('txt6').innerHTML = data[7]
+			}); 
+		// Список программ по карте
+		c_programs = data[5]; 
+		const select = document.getElementById('card_programs');
+		for (const item of c_programs) {
+		  const option = document.createElement('option');
+		  option.value = item.level;
+		  option.textContent = `${item.description} (${item.price} руб.)`;
+		  select.appendChild(option);
+		}
+		// Добавляем обработчик выбора программы
+		document.addEventListener('DOMContentLoaded', function() {
+		  updateSelectedProgram(); // Устанавливаем начальное состояние
+		  document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
+		});		
+		
+		const tg = window.Telegram.WebApp;
+
+		//telegramInitData = tg.initData;
+		//tg.showAlert(decodeURIComponent(telegramInitData));
+/*
+		const verifyTelegramWebAppData = (telegramInitData: string) => {
+			  // The data is a query string, which is composed of a series of field-value pairs.
+			  const encoded = decodeURIComponent(telegramInitData);
+
+			  // HMAC-SHA-256 signature of the bot's token with the constant string WebAppData used as a key.
+			  const secret = crypto.createHmac("sha256", "WebAppData").update(botToken);
+
+			  // Data-check-string is a chain of all received fields'.
+			  const arr = encoded.split("&");
+			  const hashIndex = arr.findIndex((str) => str.startsWith("hash="));
+			  const hash = arr.splice(hashIndex)[0].split("=")[1];
+			  // Sorted alphabetically
+			  arr.sort((a, b) => a.localeCompare(b));
+			  // In the format key=<value> with a line feed character ('\n', 0x0A) used as separator
+			  // e.g., 'auth_date=<auth_date>\nquery_id=<query_id>\nuser=<user>
+			const dataCheckString = arr.join("\n");
+
+	  		// The hexadecimal representation of the HMAC-SHA-256 signature of the data-check-string with the secret key
+  			const _hash = crypto
+  			  .createHmac("sha256", secret.digest())
+  			  .update(dataCheckString)
+  			  .digest("hex");
+
+  			// If hash is equal, the data may be used on your server.
+	  		// Complex data types are represented as JSON-serialized objects.
+  			return _hash === hash;
+		};
+
+		if (!verifyTelegramWebAppData) {
+			tg.close();
+		}
+*/
+
+		tg.ready();
+		tg.isExpanded;
+		tg.expand();
+		tg.MainButton.setText("Купить карту");
+		tg.MainButton.onClick(() => {     
+			sendAppData();
+		});
+		tg.MainButton.show();
+
+
+		function sendAppData() {
+
+			tg.sendData("Данные из приложения.");
+  		}
+		
+</script>
+
+<!------------------------------------Вкладки (tabs)---------------------------------------->
+	
+<h1>Y-bot</h1>
+<main>
+  
+  <input id="tab1" type="radio" name="tabs" checked>
+  <label for="tab1">Сообщество</label>
+    
+  <input id="tab2" type="radio" name="tabs">
+  <label for="tab2">Карта</label>
+    
+  <input id="tab3" type="radio" name="tabs">
+  <label for="tab3">MBA</label>
+
+  <input id="tab4" type="radio" name="tabs">
+  <label for="tab4">Оферта</label>
+    
+  <section id="content1">
+      			<h2>Y ?</h2>
+	  		<p></p>
+			<p>
+				<bg1><img alt="" src="bg1.png" /></bg1>
+			</p>
+			<p id=txt3></p>
+  </section>
+    
+  <section id="content2">
+      			<h2>Y-Карта</h2>
+			<p></p>
+	  		<p>
+				<select id="card_programs" name="Y-card">
+					<option value="">Выберите...</option>
+				</select>
+			</p>
+			<p id=selected_program>ДОСТУП К НОВОСТЯМ СООБЩЕСТВА</p>	
+  </section>
+    
+  <section id="content3">
+      			<h2>MBA</h2>
+			<p></p>
+			<p id=txt6></p>	
+  </section>
+
+  <section id="content4">
+      			<h2>Оферта</h2>
+	  		<p></p>
+			<p id=txt7></p>
+  </section>
+
+</main>
+	
+</body>
+</html>
