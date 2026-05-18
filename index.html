@@ -38,16 +38,16 @@
 				//document.getElementById('txt5').innerHTML = d_text[5];
 				document.getElementById('txt6').innerHTML = data[6];
 				document.getElementById('txt7').innerHTML = data[7]
+				// Список программ по карте
+				c_programs = data[5]; 
+				const select = document.getElementById('card_programs');
+				for (const item of c_programs) {
+		  			const option = document.createElement('option');
+		  			option.value = item.level;
+		  			option.textContent = `${item.description} (${item.price} руб.)`;
+		  			select.appendChild(option);
+				}
 			}); 
-		// Список программ по карте
-		c_programs = data[5]; 
-		const select = document.getElementById('card_programs');
-		for (const item of c_programs) {
-		  const option = document.createElement('option');
-		  option.value = item.level;
-		  option.textContent = `${item.description} (${item.price} руб.)`;
-		  select.appendChild(option);
-		}
 		// Добавляем обработчик выбора программы
 		document.addEventListener('DOMContentLoaded', function() {
 		  updateSelectedProgram(); // Устанавливаем начальное состояние
