@@ -55,6 +55,11 @@
 		  updateSelectedProgram(); // Устанавливаем начальное состояние
 		  document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
 		});		
+		// Загрузить оферту
+		fetch('offer.html')
+			.then(response => response.text())
+			.then(html => document.getElementById('offer_text').innerHTML = html);
+		
 		
 		const tg = window.Telegram.WebApp;
 
@@ -153,7 +158,7 @@
   <section id="content4">
       			<h2>Оферта</h2>
 	  		<p></p>
-			<iframe src="offer.html"></iframe>
+			<p id=offer_text></p>				
   </section>
 
 </main>
