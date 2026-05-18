@@ -22,7 +22,7 @@
 
 		  if (selectedIndex > 0) { // Пропускаем первую опцию («Выберите...»)
 			const selectedOption = select.options[selectedIndex];
-			const description = c_programs[selectedIndex+1].description
+			const description = c_programs[selectedIndex-1].description
 			displayElement.textContent = description; //selectedOption.textContent;
 		  } else {
 			displayElement.textContent = 'Ничего не выбрано';
