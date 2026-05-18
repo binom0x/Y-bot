@@ -30,7 +30,7 @@
 		  }
 		}	
 		// Функция обновления отображения варианта учебного курса
-		function updateSelectedProgram() {
+		function updateSelectedCource() {
 		  const select = document.getElementById('Y_cources');
 		  const selectedIndex = select.selectedIndex;
 		  const displayElement = document.getElementById('selected_cource');
@@ -78,6 +78,10 @@
 		document.addEventListener('DOMContentLoaded', function() {
 		  updateSelectedProgram(); // Устанавливаем начальное состояние
 		  document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
+		// Добавляем обработчик выбора курса
+		document.addEventListener('DOMContentLoaded', function() {
+		  updateSelectedCource(); // Устанавливаем начальное состояние
+		  document.getElementById('card_programs').addEventListener('change', updateSelectedCource);
 		});		
 		// Загрузить оферту
 		fetch('offer.html')
