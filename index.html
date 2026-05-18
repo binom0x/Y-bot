@@ -75,14 +75,14 @@
 				}
 			}); 
 		// Добавляем обработчик выбора программы
-		document.addEventListener('DOMContentLoaded', function() {
-		  updateSelectedProgram(); // Устанавливаем начальное состояние
-		  document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
+		//document.addEventListener('DOMContentLoaded', function() {
+		updateSelectedProgram(); // Устанавливаем начальное состояние
+		document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
 		// Добавляем обработчик выбора курса
-		document.addEventListener('DOMContentLoaded', function() {
-		  updateSelectedCource(); // Устанавливаем начальное состояние
-		  document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
-		});		
+		//document.addEventListener('DOMContentLoaded', function() {
+		updateSelectedCource(); // Устанавливаем начальное состояние
+		document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
+		//});		
 		// Загрузить оферту
 		fetch('offer.html')
 			.then(response => response.text())
