@@ -13,6 +13,7 @@
 
 	<script>
 		c_programs = [];
+		y_cources = [];
 
 		// Функция обновления отображения выбранного варианта программ
 		function updateSelectedProgram() {
@@ -23,6 +24,20 @@
 		  if (selectedIndex > 0) { // Пропускаем первую опцию («Выберите...»)
 			const selectedOption = select.options[selectedIndex];
 			const description = c_programs[selectedIndex-1].description
+			displayElement.innerHTML = description; //selectedOption.textContent;
+		  } else {
+			displayElement.textContent = 'Ничего не выбрано';
+		  }
+		}	
+		// Функция обновления отображения варианта учебного курса
+		function updateSelectedProgram() {
+		  const select = document.getElementById('Y_cources');
+		  const selectedIndex = select.selectedIndex;
+		  const displayElement = document.getElementById('selected_cource');
+
+		  if (selectedIndex > 0) { // Пропускаем первую опцию («Выберите...»)
+			const selectedOption = select.options[selectedIndex];
+			const description = y_cources[selectedIndex-1].description
 			displayElement.innerHTML = description; //selectedOption.textContent;
 		  } else {
 			displayElement.textContent = 'Ничего не выбрано';
@@ -39,10 +54,19 @@
 				document.getElementById('txt3').innerHTML = data[3];
 				//document.getElementById('txt4').innerHTML = d_text[4];
 				//document.getElementById('txt5').innerHTML = data[5];
-				document.getElementById('txt6').innerHTML = data[6];
+				//document.getElementById('txt6').innerHTML = data[6];
 				// Список программ по карте
 				c_programs = data[5].product; 
 				const select = document.getElementById('card_programs');
+				for (const item of c_programs) {
+				  const option = document.createElement('option');
+				  option.value = item.level;
+				  option.textContent = `${item.level} (${item.price} руб.)`;
+				  select.appendChild(option);
+				}
+				// Список учебных курсов
+				y_cources = data[6]; 
+				const select = document.getElementById('Y_cources');
 				for (const item of c_programs) {
 				  const option = document.createElement('option');
 				  option.value = item.level;
@@ -146,13 +170,18 @@
 					<option value="">Выберите...</option>
 				</select>
 			</p>
-			<p id=selected_program>ДОСТУП К НОВОСТЯМ СООБЩЕСТВА</p>	
+			<p id=selected_program></p>	
   </section>
     
   <section id="content3">
       			<h2>Y-MBA</h2>
 			<p></p>
-			<p id=txt6></p>	
+			<p>
+				<select id="Y_cources" name="Y-MBA">
+					<option value="">Выберите...</option>
+				</select>
+			</p>
+			<p id=selected_cource></p>	
   </section>
 
   <section id="content4">
