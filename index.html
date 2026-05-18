@@ -17,10 +17,37 @@
     let selectedProduct = null;
     let tgUser = null;
 
-    // Получение данных пользователя из Telegram
     const tg = window.Telegram.WebApp;
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         tgUser = tg.initDataUnsafe.user;
+    }
+
+    // Управление главной кнопкой Telegram
+    function updateMainButton() {
+        if (!selectedProduct) {
+            tg.MainButton.hide();
+            return;
+        }
+        // Проверяем, активна ли вкладка, соответствующая типу продукта
+        const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
+        const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
+        if (activeTabId === productTab) {
+            tg.MainButton.show();
+        } else {
+            tg.MainButton.hide();
+        }
+    }
+
+    // Сброс выбора продукта и очистка селектов
+    function resetSelection() {
+        selectedProduct = null;
+        const cardSelect = document.getElementById('card_programs');
+        const courseSelect = document.getElementById('Y_cources');
+        if (cardSelect) cardSelect.selectedIndex = 0;
+        if (courseSelect) courseSelect.selectedIndex = 0;
+        document.getElementById('selected_program').innerHTML = 'Ничего не выбрано';
+        document.getElementById('selected_cource').innerHTML = 'Ничего не выбрано';
+        updateMainButton();
     }
 
     // Обновление выбора программы Y-Карты
@@ -42,6 +69,7 @@
             displayElement.textContent = 'Ничего не выбрано';
             if (selectedProduct && selectedProduct.type === 'card') selectedProduct = null;
         }
+        updateMainButton();
     }
 
     // Обновление выбора курса Y-MBA
@@ -63,6 +91,7 @@
             displayElement.textContent = 'Ничего не выбрано';
             if (selectedProduct && selectedProduct.type === 'mba') selectedProduct = null;
         }
+        updateMainButton();
     }
 
     // Загрузка данных из content.json
@@ -72,7 +101,6 @@
             let data = jsonData;
             document.getElementById('txt3').innerHTML = data[3];
 
-            // Заполнение селекта карт
             c_programs = data[5].product;
             const select1 = document.getElementById('card_programs');
             for (const item of c_programs) {
@@ -82,7 +110,6 @@
                 select1.appendChild(option);
             }
 
-            // Заполнение селекта курсов
             y_cources = data[6];
             const select2 = document.getElementById('Y_cources');
             for (const item of y_cources) {
@@ -93,18 +120,31 @@
             }
         });
 
-    // Обработчики изменения выбора
+    // Отслеживание смены вкладки
+    function bindTabChange() {
+        const tabs = document.querySelectorAll('input[name="tabs"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('change', function() {
+                resetSelection();   // при смене вкладки сбрасываем выбранный продукт
+            });
+        });
+    }
+
+    // Загрузка оферты
+    fetch('offer.html')
+        .then(response => response.text())
+        .then(html => document.getElementById('offer_text').innerHTML = html);
+
+    // Инициализация после загрузки DOM
     document.addEventListener('DOMContentLoaded', function () {
+        bindTabChange();
         updateSelectedProgram();
         document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
         updateSelectedCource();
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
+        // Изначально кнопка скрыта
+        tg.MainButton.hide();
     });
-
-    // Загрузка текста оферты
-    fetch('offer.html')
-        .then(response => response.text())
-        .then(html => document.getElementById('offer_text').innerHTML = html);
 
     // Настройка главной кнопки Telegram
     tg.ready();
@@ -119,10 +159,11 @@
             tg.showAlert("Не удалось определить пользователя");
             return;
         }
+        // Отправка данных боту – он сам проверит, есть ли уже активная покупка
         tg.sendData(JSON.stringify(selectedProduct));
+        // После отправки можно сбросить выбор, чтобы избежать повторной отправки
+        resetSelection();
     });
-    tg.MainButton.show();
-
 </script>
 
 <!-- Вкладки -->
