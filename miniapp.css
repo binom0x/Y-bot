@@ -94,11 +94,11 @@
 	}
 
 	label[for*='2']:before {
-	  content: '\f02d';
+	  content: '\f09d';
 	}
 
 	label[for*='3']:before {
-	  content: '\f007';
+	  content: '\f02d';
 	}
 
 	label[for*='4']:before {
