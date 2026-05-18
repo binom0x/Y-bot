@@ -57,21 +57,21 @@
 				//document.getElementById('txt6').innerHTML = data[6];
 				// Список программ по карте
 				c_programs = data[5].product; 
-				const select = document.getElementById('card_programs');
+				const select1 = document.getElementById('card_programs');
 				for (const item of c_programs) {
 				  const option = document.createElement('option');
 				  option.value = item.level;
 				  option.textContent = `${item.level} (${item.price} руб.)`;
-				  select.appendChild(option);
+				  select1.appendChild(option);
 				}
 				// Список учебных курсов
 				y_cources = data[6]; 
-				const select = document.getElementById('Y_cources');
+				const select2 = document.getElementById('Y_cources');
 				for (const item of c_programs) {
 				  const option = document.createElement('option');
 				  option.value = item.level;
 				  option.textContent = `${item.level} (${item.price} руб.)`;
-				  select.appendChild(option);
+				  select2.appendChild(option);
 				}
 			}); 
 		// Добавляем обработчик выбора программы
