@@ -46,6 +46,7 @@
 	main {
 	  min-width: 220px;
 	  max-width: 600px;
+	  height: 100vh;
 	  padding: 1em;
 	  margin: 0 auto;
 	  background-image: url("Y.png");
