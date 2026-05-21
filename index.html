@@ -34,7 +34,7 @@
     // Вызов через 1 секунду после загрузки страницы
     setTimeout(showDebug, 1000);
 </script>
-    
+
 <script>
     c_programs = [];
     y_cources = [];
@@ -125,7 +125,7 @@
                 type: 'card',
                 level: item.level,
                 price: parseInt(item.price, 10),
-                user: tgUser
+                //user: tgUser
             };
         } else {
             displayElement.textContent = 'Ничего не выбрано';
@@ -147,7 +147,7 @@
                 type: 'mba',
                 level: item.level,
                 price: parseInt(item.price, 10),
-                user: tgUser
+                //user: tgUser
             };
         } else {
             displayElement.textContent = 'Ничего не выбрано';
@@ -213,18 +213,13 @@
     if (tg) {
         tg.MainButton.setText("Купить");
         tg.MainButton.onClick(() => {
-            if (!selectedProduct) {
-                tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
-                return;
-            }
-            if (!tgUser || !tgUser.id) {
-                tg.showAlert("Не удалось определить пользователя. Пожалуйста, перезапустите мини-приложение из Telegram.");
-                console.error("Нет данных пользователя:", tgUser);
-                return;
-            }
-            // Отправка данных боту
-            tg.sendData(JSON.stringify(selectedProduct));
-            resetSelection();
+			if (!selectedProduct) {
+				tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
+				return;
+			}
+			// Отправка данных боту (бот сам определит пользователя по message.chat.id)
+			tg.sendData(JSON.stringify(selectedProduct));
+			resetSelection();
         });
     } else {
         // Если Telegram WebApp не загрузился, показываем сообщение при попытке купить
