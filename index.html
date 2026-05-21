@@ -16,19 +16,57 @@
     y_cources = [];
     let selectedProduct = null;
     let tgUser = null;
+    let tg = null;
 
-    const tg = window.Telegram.WebApp;
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        tgUser = tg.initDataUnsafe.user;
+    // Инициализация Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+    } else {
+        console.error("Telegram WebApp не найден. Убедитесь, что скрипт telegram-web-app.js загружен.");
+        // Можно показать сообщение пользователю, но не прерываем работу полностью
+    }
+
+    // Получение данных пользователя (надёжный способ)
+    function getTelegramUser() {
+        if (!tg) return null;
+
+        // 1. Прямой доступ через initDataUnsafe
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            return tg.initDataUnsafe.user;
+        }
+
+        // 2. Попытка распарсить initData (строка вида "user=...&hash=...")
+        if (tg.initData) {
+            try {
+                const params = new URLSearchParams(tg.initData);
+                const userParam = params.get('user');
+                if (userParam) {
+                    return JSON.parse(decodeURIComponent(userParam));
+                }
+            } catch (e) {
+                console.error("Ошибка парсинга initData:", e);
+            }
+        }
+
+        return null;
+    }
+
+    tgUser = getTelegramUser();
+    if (tgUser && tgUser.id) {
+        console.log("Пользователь определён:", tgUser.id, tgUser.username);
+    } else {
+        console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
     }
 
     // Управление главной кнопкой Telegram
     function updateMainButton() {
+        if (!tg) return;
         if (!selectedProduct) {
             tg.MainButton.hide();
             return;
         }
-        // Проверяем, активна ли вкладка, соответствующая типу продукта
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
         const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
         if (activeTabId === productTab) {
@@ -38,7 +76,7 @@
         }
     }
 
-    // Сброс выбора продукта и очистка селектов
+    // Сброс выбора продукта
     function resetSelection() {
         selectedProduct = null;
         const cardSelect = document.getElementById('card_programs');
@@ -118,14 +156,15 @@
                 option.textContent = `${item.level} (${item.price} руб.)`;
                 select2.appendChild(option);
             }
-        });
+        })
+        .catch(err => console.error("Ошибка загрузки content.json:", err));
 
     // Отслеживание смены вкладки
     function bindTabChange() {
         const tabs = document.querySelectorAll('input[name="tabs"]');
         tabs.forEach(tab => {
             tab.addEventListener('change', function() {
-                resetSelection();   // при смене вкладки сбрасываем выбранный продукт
+                resetSelection();
             });
         });
     }
@@ -133,37 +172,44 @@
     // Загрузка оферты
     fetch('offer.html')
         .then(response => response.text())
-        .then(html => document.getElementById('offer_text').innerHTML = html);
+        .then(html => document.getElementById('offer_text').innerHTML = html)
+        .catch(err => console.error("Ошибка загрузки offer.html:", err));
 
     // Инициализация после загрузки DOM
     document.addEventListener('DOMContentLoaded', function () {
         bindTabChange();
-        updateSelectedProgram();
         document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
-        updateSelectedCource();
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
-        // Изначально кнопка скрыта
-        tg.MainButton.hide();
+        updateSelectedProgram();  // начальное состояние
+        updateSelectedCource();
+        if (tg) tg.MainButton.hide();
     });
 
-    // Настройка главной кнопки Telegram
-    tg.ready();
-    tg.expand();
-    tg.MainButton.setText("Купить");
-    tg.MainButton.onClick(() => {
-        if (!selectedProduct) {
-            tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
-            return;
-        }
-        if (!tgUser || !tgUser.id) {
-            tg.showAlert("Не удалось определить пользователя");
-            return;
-        }
-        // Отправка данных боту – он сам проверит, есть ли уже активная покупка
-        tg.sendData(JSON.stringify(selectedProduct));
-        // После отправки можно сбросить выбор, чтобы избежать повторной отправки
-        resetSelection();
-    });
+    // Настройка главной кнопки Telegram (только если tg существует)
+    if (tg) {
+        tg.MainButton.setText("Купить");
+        tg.MainButton.onClick(() => {
+            if (!selectedProduct) {
+                tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
+                return;
+            }
+            if (!tgUser || !tgUser.id) {
+                tg.showAlert("Не удалось определить пользователя. Пожалуйста, перезапустите мини-приложение из Telegram.");
+                console.error("Нет данных пользователя:", tgUser);
+                return;
+            }
+            // Отправка данных боту
+            tg.sendData(JSON.stringify(selectedProduct));
+            resetSelection();
+        });
+    } else {
+        // Если Telegram WebApp не загрузился, показываем сообщение при попытке купить
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.tg-main-button') || (selectedProduct && confirm("Купить? (Telegram WebApp не активен)"))) {
+                alert("Мини-приложение запущено вне Telegram. Покупка недоступна.");
+            }
+        });
+    }
 </script>
 
 <!-- Вкладки -->
