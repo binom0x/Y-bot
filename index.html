@@ -11,30 +11,6 @@
 
 <body>
 
-<div id="debug" style="background:#ffeeee; padding:5px; margin:5px; border:1px solid red; font-size:12px; display:none;">
-    <b>Отладка Telegram WebApp</b><br>
-    <span id="debugInfo"></span>
-</div>
-<script>
-    function showDebug() {
-        const debugDiv = document.getElementById('debug');
-        const debugInfo = document.getElementById('debugInfo');
-        if (!debugDiv) return;
-        debugDiv.style.display = 'block';
-        let info = `tg существует: ${!!tg}<br>`;
-        if (tg) {
-            info += `initDataUnsafe: ${JSON.stringify(tg.initDataUnsafe)}<br>`;
-            info += `initData: ${tg.initData ? tg.initData.substring(0, 100) : 'нет'}<br>`;
-            info += `tgUser: ${JSON.stringify(tgUser)}<br>`;
-        } else {
-            info += 'Telegram WebApp не загружен. Проверьте интернет и скрипт telegram-web-app.js';
-        }
-        debugInfo.innerHTML = info;
-    }
-    // Вызов через 1 секунду после загрузки страницы
-    setTimeout(showDebug, 1000);
-</script>
-
 <script>
     c_programs = [];
     y_cources = [];
