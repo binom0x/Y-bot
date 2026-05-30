@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <meta charset="UTF-8">
@@ -7,133 +8,59 @@
     <title>Y - Ваш ключ от будущего!</title>
     <link rel="stylesheet" href="miniapp.css" type="text/css" media="all">
 </head>
+
 <body>
 
 <script>
-    // ----------------------- НАСТРОЙКА API -----------------------
-    // !!! ЗАМЕНИТЕ ЭТОТ URL НА РЕАЛЬНЫЙ АДРЕС ВАШЕГО БОТА (Colab + ngrok) !!!
-    const API_BASE = 'https://chowtime-variable-macarena.ngrok-free.dev/';   // <-- СЮДА ВАШ URL ИЗ COLAB
-    
     c_programs = [];
     y_cources = [];
     let selectedProduct = null;
+    let tgUser = null;
     let tg = null;
-    let userId = null;
 
     // Инициализация Telegram WebApp
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+    } else {
+        console.error("Telegram WebApp не найден. Убедитесь, что скрипт telegram-web-app.js загружен.");
+        // Можно показать сообщение пользователю, но не прерываем работу полностью
     }
 
-    // Способ 1: получение пользователя из Telegram
+    // Получение данных пользователя (надёжный способ)
     function getTelegramUser() {
         if (!tg) return null;
+
+        // 1. Прямой доступ через initDataUnsafe
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             return tg.initDataUnsafe.user;
         }
+
+        // 2. Попытка распарсить initData (строка вида "user=...&hash=...")
         if (tg.initData) {
             try {
                 const params = new URLSearchParams(tg.initData);
                 const userParam = params.get('user');
-                if (userParam) return JSON.parse(decodeURIComponent(userParam));
-            } catch(e) { console.error(e); }
+                if (userParam) {
+                    return JSON.parse(decodeURIComponent(userParam));
+                }
+            } catch (e) {
+                console.error("Ошибка парсинга initData:", e);
+            }
         }
+
         return null;
     }
 
-    // Способ 2: получение user_id из URL (?user_id=123)
-    function getUserIdFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        let uid = urlParams.get('user_id');
-        if (uid) return parseInt(uid, 10);
-        // Попытка распарсить tgWebAppData, если есть
-        const tgData = urlParams.get('tgWebAppData');
-        if (tgData) {
-            try {
-                const data = JSON.parse(decodeURIComponent(tgData));
-                if (data.user && data.user.id) return data.user.id;
-            } catch(e) {}
-        }
-        return null;
-    }
-
-    const tgUser = getTelegramUser();
-    userId = tgUser?.id || getUserIdFromURL();
-
-    // ----------------------- ЗАГРУЗКА ДАШБОРДА -----------------------
-    async function loadDashboard(uid) {
-        const cardContainer = document.getElementById('card-list');
-        const mbaContainer = document.getElementById('mba-list');
-        const userIdSpan = document.getElementById('user-id');
-        const userNameSpan = document.getElementById('user-name');
-        const userUsernameSpan = document.getElementById('user-username');
-
-        if (!uid) {
-            const errorMsg = '⚠️ Пользователь не определён. Пожалуйста, откройте мини-приложение через бота.';
-            if (cardContainer) cardContainer.innerHTML = errorMsg;
-            if (mbaContainer) mbaContainer.innerHTML = errorMsg;
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_BASE}/api/user/${uid}`);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-
-            if (userIdSpan) userIdSpan.innerText = data.user.id;
-            const fullName = [data.user.first_name, data.user.last_name].filter(Boolean).join(' ') || '—';
-            if (userNameSpan) userNameSpan.innerText = fullName;
-            if (userUsernameSpan) userUsernameSpan.innerText = data.user.username || '—';
-
-            const cardPurchases = data.active_purchases.filter(p => p.type === 'card');
-            const mbaPurchases = data.active_purchases.filter(p => p.type === 'mba');
-
-            if (cardPurchases.length === 0) {
-                cardContainer.innerHTML = 'Нет активных членств';
-            } else {
-                let html = '<ul>';
-                cardPurchases.forEach(p => {
-                    const expiry = new Date(p.expiry_date).toLocaleDateString('ru-RU');
-                    html += `<li><strong>${p.level}</strong><br>💰 ${p.price} руб.<br>📅 до ${expiry}</li>`;
-                });
-                html += '</ul>';
-                cardContainer.innerHTML = html;
-            }
-
-            if (mbaPurchases.length === 0) {
-                mbaContainer.innerHTML = 'Нет активных курсов';
-            } else {
-                let html = '<ul>';
-                mbaPurchases.forEach(p => {
-                    const expiry = new Date(p.expiry_date).toLocaleDateString('ru-RU');
-                    html += `<li><strong>${p.level}</strong><br>💰 ${p.price} руб.<br>📅 до ${expiry}</li>`;
-                });
-                html += '</ul>';
-                mbaContainer.innerHTML = html;
-            }
-        } catch (err) {
-            console.error('Ошибка загрузки дашборда:', err);
-            cardContainer.innerHTML = '❌ Ошибка загрузки данных. Проверьте адрес API_BASE.';
-            mbaContainer.innerHTML = '❌ Ошибка загрузки данных.';
-        }
-    }
-
-    // Запуск загрузки, если пользователь известен
-    if (userId) {
-        loadDashboard(userId);
+    tgUser = getTelegramUser();
+    if (tgUser && tgUser.id) {
+        console.log("Пользователь определён:", tgUser.id, tgUser.username);
     } else {
-        // Если пользователь не определён, показываем сообщение после загрузки DOM
-        document.addEventListener('DOMContentLoaded', () => {
-            const cardContainer = document.getElementById('card-list');
-            const mbaContainer = document.getElementById('mba-list');
-            if (cardContainer) cardContainer.innerHTML = '⚠️ Не удалось определить пользователя. Убедитесь, что вы открыли приложение через Telegram-бота.';
-            if (mbaContainer) mbaContainer.innerHTML = '⚠️ Не удалось определить пользователя.';
-        });
+        console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
     }
 
-    // ----------------------- ЛОГИКА ПОКУПКИ (вкладки 2 и 3) -----------------------
+    // Управление главной кнопкой Telegram
     function updateMainButton() {
         if (!tg) return;
         if (!selectedProduct) {
@@ -149,6 +76,7 @@
         }
     }
 
+    // Сброс выбора продукта
     function resetSelection() {
         selectedProduct = null;
         const cardSelect = document.getElementById('card_programs');
@@ -160,132 +88,161 @@
         updateMainButton();
     }
 
+    // Обновление выбора программы Y-Карты
     function updateSelectedProgram() {
         const select = document.getElementById('card_programs');
-        const idx = select.selectedIndex;
-        const display = document.getElementById('selected_program');
-        if (idx > 0) {
-            const item = c_programs[idx - 1];
-            display.innerHTML = item.description;
-            selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price, 10) };
+        const selectedIndex = select.selectedIndex;
+        const displayElement = document.getElementById('selected_program');
+
+        if (selectedIndex > 0) {
+            const item = c_programs[selectedIndex - 1];
+            displayElement.innerHTML = item.description;
+            selectedProduct = {
+                type: 'card',
+                level: item.level,
+                price: parseInt(item.price, 10),
+                //user: tgUser
+            };
         } else {
-            display.textContent = 'Ничего не выбрано';
-            if (selectedProduct?.type === 'card') selectedProduct = null;
+            displayElement.textContent = 'Ничего не выбрано';
+            if (selectedProduct && selectedProduct.type === 'card') selectedProduct = null;
         }
         updateMainButton();
     }
 
+    // Обновление выбора курса Y-MBA
     function updateSelectedCource() {
         const select = document.getElementById('Y_cources');
-        const idx = select.selectedIndex;
-        const display = document.getElementById('selected_cource');
-        if (idx > 0) {
-            const item = y_cources[idx - 1];
-            display.innerHTML = item.description;
-            selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price, 10) };
+        const selectedIndex = select.selectedIndex;
+        const displayElement = document.getElementById('selected_cource');
+
+        if (selectedIndex > 0) {
+            const item = y_cources[selectedIndex - 1];
+            displayElement.innerHTML = item.description;
+            selectedProduct = {
+                type: 'mba',
+                level: item.level,
+                price: parseInt(item.price, 10),
+                //user: tgUser
+            };
         } else {
-            display.textContent = 'Ничего не выбрано';
-            if (selectedProduct?.type === 'mba') selectedProduct = null;
+            displayElement.textContent = 'Ничего не выбрано';
+            if (selectedProduct && selectedProduct.type === 'mba') selectedProduct = null;
         }
         updateMainButton();
     }
 
-    // Загрузка товаров из content.json
+    // Загрузка данных из content.json
     fetch('content.json')
-        .then(r => r.json())
+        .then(response => response.json())
         .then(jsonData => {
-            document.getElementById('txt3').innerHTML = jsonData[3];
-            c_programs = jsonData[5].product;
+            let data = jsonData;
+            document.getElementById('txt3').innerHTML = data[3];
+
+            c_programs = data[5].product;
             const select1 = document.getElementById('card_programs');
             for (const item of c_programs) {
-                const opt = document.createElement('option');
-                opt.value = item.level;
-                opt.textContent = `${item.level} (${item.price} руб.)`;
-                select1.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = item.level;
+                option.textContent = `${item.level} (${item.price} руб.)`;
+                select1.appendChild(option);
             }
-            y_cources = jsonData[6];
+
+            y_cources = data[6];
             const select2 = document.getElementById('Y_cources');
             for (const item of y_cources) {
-                const opt = document.createElement('option');
-                opt.value = item.level;
-                opt.textContent = `${item.level} (${item.price} руб.)`;
-                select2.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = item.level;
+                option.textContent = `${item.level} (${item.price} руб.)`;
+                select2.appendChild(option);
             }
         })
         .catch(err => console.error("Ошибка загрузки content.json:", err));
 
+    // Отслеживание смены вкладки
+    function bindTabChange() {
+        const tabs = document.querySelectorAll('input[name="tabs"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('change', function() {
+                resetSelection();
+            });
+        });
+    }
+
+    // Загрузка оферты
     fetch('offer.html')
-        .then(r => r.text())
+        .then(response => response.text())
         .then(html => document.getElementById('offer_text').innerHTML = html)
         .catch(err => console.error("Ошибка загрузки offer.html:", err));
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const tabs = document.querySelectorAll('input[name="tabs"]');
-        tabs.forEach(tab => tab.addEventListener('change', resetSelection));
+    // Инициализация после загрузки DOM
+    document.addEventListener('DOMContentLoaded', function () {
+        bindTabChange();
         document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
-        updateSelectedProgram();
+        updateSelectedProgram();  // начальное состояние
         updateSelectedCource();
         if (tg) tg.MainButton.hide();
     });
 
+    // Настройка главной кнопки Telegram (только если tg существует)
     if (tg) {
         tg.MainButton.setText("Купить");
         tg.MainButton.onClick(() => {
-            if (!selectedProduct) {
-                tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
-                return;
+			if (!selectedProduct) {
+				tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
+				return;
+			}
+			// Отправка данных боту (бот сам определит пользователя по message.chat.id)
+			tg.sendData(JSON.stringify(selectedProduct));
+			resetSelection();
+        });
+    } else {
+        // Если Telegram WebApp не загрузился, показываем сообщение при попытке купить
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.tg-main-button') || (selectedProduct && confirm("Купить? (Telegram WebApp не активен)"))) {
+                alert("Мини-приложение запущено вне Telegram. Покупка недоступна.");
             }
-            tg.sendData(JSON.stringify(selectedProduct));
-            resetSelection();
         });
     }
 </script>
 
+<!-- Вкладки -->
 <main>
     <input id="tab1" type="radio" name="tabs" checked>
-    <label for="tab1">Y‑Сообщество</label>
+    <label for="tab1">Y-Сообщество</label>
 
     <input id="tab2" type="radio" name="tabs">
-    <label for="tab2">Y‑Карта</label>
+    <label for="tab2">Y-Карта</label>
 
     <input id="tab3" type="radio" name="tabs">
-    <label for="tab3">Y‑MBA</label>
+    <label for="tab3">Y-MBA</label>
 
     <input id="tab4" type="radio" name="tabs">
     <label for="tab4">Оферта</label>
 
-    <!-- Вкладка 1: ДАШБОРД -->
     <section id="content1">
-        <div class="dashboard">
-            <div class="user-info">
-                <h2>👤 Личная информация</h2>
-                <p><strong>ID:</strong> <span id="user-id">—</span></p>
-                <p><strong>Имя:</strong> <span id="user-name">—</span></p>
-                <p><strong>Username:</strong> <span id="user-username">—</span></p>
-            </div>
-            <div class="memberships two-columns">
-                <div class="column card-column">
-                    <h3>💳 Y‑Карта</h3>
-                    <div id="card-list" class="purchase-list">Загрузка...</div>
-                </div>
-                <div class="column mba-column">
-                    <h3>🎓 Y‑MBA</h3>
-                    <div id="mba-list" class="purchase-list">Загрузка...</div>
-                </div>
-            </div>
-        </div>
+        <h2>Y ?</h2>
+        <p id="txt3"></p>
     </section>
 
     <section id="content2">
         <h2>Y-Карта</h2>
-        <p><select id="card_programs" name="Y-card"><option value="">Выберите...</option></select></p>
+        <p>
+            <select id="card_programs" name="Y-card">
+                <option value="">Выберите...</option>
+            </select>
+        </p>
         <p id="selected_program"></p>
     </section>
 
     <section id="content3">
         <h2>Y-MBA</h2>
-        <p><select id="Y_cources" name="Y-MBA"><option value="">Выберите...</option></select></p>
+        <p>
+            <select id="Y_cources" name="Y-MBA">
+                <option value="">Выберите...</option>
+            </select>
+        </p>
         <p id="selected_cource"></p>
     </section>
 
