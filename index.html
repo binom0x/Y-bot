@@ -56,6 +56,7 @@
     tgUser = getTelegramUser();
     if (tgUser && tgUser.id) {
         console.log("Пользователь определён:", tgUser.id, tgUser.username);
+		document.getElementById('user-id').innerHTML = tgUser.id
     } else {
         console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
     }
@@ -210,7 +211,7 @@
 <!-- Вкладки -->
 <main>
     <input id="tab1" type="radio" name="tabs" checked>
-    <label for="tab1">Y-Сообщество</label>
+    <label for="tab1">Ваши данные</label>
 
     <input id="tab2" type="radio" name="tabs">
     <label for="tab2">Y-Карта</label>
@@ -222,8 +223,24 @@
     <label for="tab4">Оферта</label>
 
     <section id="content1">
-        <h2>Y ?</h2>
-        <p id="txt3"></p>
+        <div class="dashboard">
+            <div class="user-info">
+                <h2>👤 Личная информация</h2>
+                <p><strong>ID:</strong> <span id="user-id">—</span></p>
+                <p><strong>Имя:</strong> <span id="user-name">—</span></p>
+                <p><strong>Username:</strong> <span id="user-username">—</span></p>
+            </div>
+            <div class="memberships two-columns">
+                <div class="column card-column">
+                    <h3>💳 Y‑Карта</h3>
+                    <div id="card-list" class="purchase-list">Загрузка...</div>
+                </div>
+                <div class="column mba-column">
+                    <h3>🎓 Y‑MBA</h3>
+                    <div id="mba-list" class="purchase-list">Загрузка...</div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <section id="content2">
