@@ -56,6 +56,7 @@
     tgUser = getTelegramUser();
     if (tgUser && tgUser.id) {
         console.log("Пользователь определён:", tgUser.id, tgUser.username);
+		document.getElementById('user-id').innerHTML = tgUser.id;
     } else {
         console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
     }
