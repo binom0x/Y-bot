@@ -14,6 +14,58 @@
 
 <body>
 
+<!-- Вкладки -->
+<main>
+    <input id="tab1" type="radio" name="tabs" checked>
+    <label for="tab1">Ваши данные</label>
+
+    <input id="tab2" type="radio" name="tabs">
+    <label for="tab2">Y-Карта</label>
+
+    <input id="tab3" type="radio" name="tabs">
+    <label for="tab3">Y-MBA</label>
+
+    <input id="tab4" type="radio" name="tabs">
+    <label for="tab4">Оферта</label>
+
+    <section id="content1">
+        <div class="dashboard">
+            <div class="user-info">
+                <h2>👤 Личная информация</h2>
+                <p><strong>ID:</strong> <span id="user-id">—</span></p>
+                <p><strong>Имя:</strong> <span id="user-name">—</span></p>
+                <p><strong>Username:</strong> <span id="user-username">—</span></p>
+            </div>
+			<div id="qr-place"></div>
+        </div>
+    </section>
+
+    <section id="content2">
+        <h2>Y-Карта</h2>
+        <p>
+            <select id="card_programs" name="Y-card">
+                <option value="">Выберите...</option>
+            </select>
+        </p>
+        <p id="selected_program"></p>
+    </section>
+
+    <section id="content3">
+        <h2>Y-MBA</h2>
+        <p>
+            <select id="Y_cources" name="Y-MBA">
+                <option value="">Выберите...</option>
+            </select>
+        </p>
+        <p id="selected_cource"></p>
+    </section>
+
+    <section id="content4">
+        <h2>Оферта</h2>
+        <p id="offer_text"></p>
+    </section>
+</main>
+
 <script>
 
     c_programs = [];
@@ -275,58 +327,6 @@
         });
     }
 </script>
-
-<!-- Вкладки -->
-<main>
-    <input id="tab1" type="radio" name="tabs" checked>
-    <label for="tab1">Ваши данные</label>
-
-    <input id="tab2" type="radio" name="tabs">
-    <label for="tab2">Y-Карта</label>
-
-    <input id="tab3" type="radio" name="tabs">
-    <label for="tab3">Y-MBA</label>
-
-    <input id="tab4" type="radio" name="tabs">
-    <label for="tab4">Оферта</label>
-
-    <section id="content1">
-        <div class="dashboard">
-            <div class="user-info">
-                <h2>👤 Личная информация</h2>
-                <p><strong>ID:</strong> <span id="user-id">—</span></p>
-                <p><strong>Имя:</strong> <span id="user-name">—</span></p>
-                <p><strong>Username:</strong> <span id="user-username">—</span></p>
-            </div>
-			<div id="qr-place"></div>
-        </div>
-    </section>
-
-    <section id="content2">
-        <h2>Y-Карта</h2>
-        <p>
-            <select id="card_programs" name="Y-card">
-                <option value="">Выберите...</option>
-            </select>
-        </p>
-        <p id="selected_program"></p>
-    </section>
-
-    <section id="content3">
-        <h2>Y-MBA</h2>
-        <p>
-            <select id="Y_cources" name="Y-MBA">
-                <option value="">Выберите...</option>
-            </select>
-        </p>
-        <p id="selected_cource"></p>
-    </section>
-
-    <section id="content4">
-        <h2>Оферта</h2>
-        <p id="offer_text"></p>
-    </section>
-</main>
 
 </body>
 </html>
