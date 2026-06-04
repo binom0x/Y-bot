@@ -167,19 +167,19 @@
         return null;
     }
 
+	const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
     tgUser = getTelegramUser();
 	if (tgUser)
-		document.getElementById('user-id').innerHTML = tgUser.id;
+		document.getElementById('user-id').innerHTML = tgUser.id.toString();
+		displayQRCode('#qr-place', tgUser.id.toString(), 180, tgButtonColor);
 	else
 		document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
+		displayQRCode('#qr-place', 'Пользователь не известен', 180, tgButtonColor);
     //if (tgUser && tgUser.id) {
     //	console.log("Пользователь определён:", tgUser.id, tgUser.username);
     //} else {
     //    console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
     //}
-	
-	// Сгенерировать QR-код пользователя
-	displayQRCode('#qr-place', 'https://yandex.ru', 180, '#ff6600');
 
     // Управление главной кнопкой Telegram
     function updateMainButton() {
