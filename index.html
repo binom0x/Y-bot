@@ -15,11 +15,65 @@
 <body>
 
 <script>
+
     c_programs = [];
     y_cources = [];
     let selectedProduct = null;
     let tgUser = null;
     let tg = null;
+
+	function displayQRCode(container, text, size, color, margin = 2) {
+		/**
+		 * Генерирует QR‑код и вставляет его в HTML‑элемент на странице.
+		 * @param {string|HTMLElement} container - CSS‑селектор ('.qr-container') или DOM‑элемент.
+		 * @param {string} text - Текст или ссылка для кодирования.
+		 * @param {number} size - Размер QR‑кода в пикселях (ширина и высота).
+		 * @param {string|Object} color - Цвет точек: строка '#ff0000' или объект { dark, light }.
+		 * @param {number} margin - Отступ (белая рамка) в модулях, по умолчанию 2.
+		 */		
+
+		// Находим контейнер
+		const target = typeof container === 'string' 
+			? document.querySelector(container) 
+			: container;
+		if (!target) {
+			console.error('Контейнер для QR‑кода не найден');
+			return;
+		}
+
+		// Нормализуем цвета
+		let darkColor = '#000000';
+		let lightColor = '#ffffff';
+		if (typeof color === 'string') {
+			darkColor = color;
+		} else if (typeof color === 'object' && color !== null) {
+			darkColor = color.dark || '#000000';
+			lightColor = color.light || '#ffffff';
+		}
+
+		// Очищаем контейнер, чтобы не было старых canvas
+		target.innerHTML = '';
+
+		// Создаём canvas элемент
+		const canvas = document.createElement('canvas');
+		target.appendChild(canvas);
+
+		// Генерируем QR‑код с помощью библиотеки QRCode
+		QRCode.toCanvas(canvas, text, {
+			width: size,
+			margin: margin,
+			color: {
+				dark: darkColor,
+				light: lightColor
+			},
+			errorCorrectionLevel: 'M'
+		}, (error) => {
+			if (error) {
+				console.error('Ошибка генерации QR:', error);
+				target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
+			}
+		});
+	}
 
     // Инициализация Telegram WebApp
     if (window.Telegram && window.Telegram.WebApp) {
@@ -35,14 +89,18 @@
     function getTelegramUser() {
         if (!tg) return null;
 
+		console.log("Определяю пользователя...");
+
         // 1. Прямой доступ через initDataUnsafe
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            return tg.initDataUnsafe.user;
+			console.log("Пользователь определён:", tg.initDataUnsafe.user);
+            return tg.initDataUnsafe.user;    
         }
 
         // 2. Попытка распарсить initData (строка вида "user=...&hash=...")
         if (tg.initData) {
             try {
+				console.log("Парсим пользователя:", tg.initData);
                 const params = new URLSearchParams(tg.initData);
                 const userParam = params.get('user');
                 if (userParam) {
@@ -53,11 +111,12 @@
             }
         }
 
+		console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
         return null;
     }
 
     tgUser = getTelegramUser();
-	//document.getElementById('user-id').innerHTML = tgUser.id;
+	document.getElementById('user-id').innerHTML = tgUser.id;
     //if (tgUser && tgUser.id) {
     //	console.log("Пользователь определён:", tgUser.id, tgUser.username);
     //} else {
@@ -65,7 +124,7 @@
     //}
 	
 	// Сгенерировать QR-код пользователя
-	
+	displayQRCode('#qr', 'https://yandex.ru', 180, '#ff6600');
 
     // Управление главной кнопкой Telegram
     function updateMainButton() {
@@ -236,16 +295,7 @@
                 <p><strong>Имя:</strong> <span id="user-name">—</span></p>
                 <p><strong>Username:</strong> <span id="user-username">—</span></p>
             </div>
-            <div class="memberships two-columns">
-                <div class="column card-column">
-                    <h3>💳 Y‑Карта</h3>
-                    <div id="card-list" class="purchase-list">Загрузка...</div>
-                </div>
-                <div class="column mba-column">
-                    <h3>🎓 Y‑MBA</h3>
-                    <div id="mba-list" class="purchase-list">Загрузка...</div>
-                </div>
-            </div>
+			<div id="qr-place"></div>
         </div>
     </section>
 
