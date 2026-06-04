@@ -31,12 +31,11 @@
     <section id="content1">
         <div class="dashboard">
             <div class="user-info">
-                <p>👤 Личная информация</p>
                 <p><strong>ID:</strong> <span id="user-id">—</span></p>
                 <p><strong>Имя:</strong> <span id="user-name">—</span></p>
                 <p><strong>Username:</strong> <span id="user-username">—</span></p>
             </div>
-			<div id="qr-place"></div>
+            <div id="qr-place"></div>
         </div>
     </section>
 
@@ -67,65 +66,46 @@
 </main>
 
 <script>
-
-    c_programs = [];
-    y_cources = [];
+    let c_programs = [];
+    let y_cources = [];
     let selectedProduct = null;
     let tgUser = null;
     let tg = null;
 
-	function displayQRCode(container, text, size, color, margin = 2) {
-		/**
-		 * Генерирует QR‑код и вставляет его в HTML‑элемент на странице.
-		 * @param {string|HTMLElement} container - CSS‑селектор ('.qr-container') или DOM‑элемент.
-		 * @param {string} text - Текст или ссылка для кодирования.
-		 * @param {number} size - Размер QR‑кода в пикселях (ширина и высота).
-		 * @param {string|Object} color - Цвет точек: строка '#ff0000' или объект { dark, light }.
-		 * @param {number} margin - Отступ (белая рамка) в модулях, по умолчанию 2.
-		 */		
+    function displayQRCode(container, text, size, color, margin = 2) {
+        const target = typeof container === 'string' 
+            ? document.querySelector(container) 
+            : container;
+        if (!target) {
+            console.error('Контейнер для QR‑кода не найден');
+            return;
+        }
 
-		// Находим контейнер
-		const target = typeof container === 'string' 
-			? document.querySelector(container) 
-			: container;
-		if (!target) {
-			console.error('Контейнер для QR‑кода не найден');
-			return;
-		}
+        let darkColor = '#000000';
+        let lightColor = '#ffffff';
+        if (typeof color === 'string') {
+            darkColor = color;
+        } else if (typeof color === 'object' && color !== null) {
+            darkColor = color.dark || '#000000';
+            lightColor = color.light || '#ffffff';
+        }
 
-		// Нормализуем цвета
-		let darkColor = '#000000';
-		let lightColor = '#ffffff';
-		if (typeof color === 'string') {
-			darkColor = color;
-		} else if (typeof color === 'object' && color !== null) {
-			darkColor = color.dark || '#000000';
-			lightColor = color.light || '#ffffff';
-		}
+        target.innerHTML = '';
+        const canvas = document.createElement('canvas');
+        target.appendChild(canvas);
 
-		// Очищаем контейнер, чтобы не было старых canvas
-		target.innerHTML = '';
-
-		// Создаём canvas элемент
-		const canvas = document.createElement('canvas');
-		target.appendChild(canvas);
-
-		// Генерируем QR‑код с помощью библиотеки QRCode
-		QRCode.toCanvas(canvas, text, {
-			width: size,
-			margin: margin,
-			color: {
-				dark: darkColor,
-				light: lightColor
-			},
-			errorCorrectionLevel: 'M'
-		}, (error) => {
-			if (error) {
-				console.error('Ошибка генерации QR:', error);
-				target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
-			}
-		});
-	}
+        QRCode.toCanvas(canvas, text, {
+            width: size,
+            margin: margin,
+            color: { dark: darkColor, light: lightColor },
+            errorCorrectionLevel: 'M'
+        }, (error) => {
+            if (error) {
+                console.error('Ошибка генерации QR:', error);
+                target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
+            }
+        });
+    }
 
     // Инициализация Telegram WebApp
     if (window.Telegram && window.Telegram.WebApp) {
@@ -133,56 +113,47 @@
         tg.ready();
         tg.expand();
     } else {
-        console.error("Telegram WebApp не найден. Убедитесь, что скрипт telegram-web-app.js загружен.");
-        // Можно показать сообщение пользователю, но не прерываем работу полностью
+        console.error("Telegram WebApp не найден.");
     }
 
-    // Получение данных пользователя (надёжный способ)
+    // Получение данных пользователя (сначала из initDataUnsafe, потом из URL)
     function getTelegramUser() {
         if (!tg) return null;
 
-		console.log("Определяю пользователя...");
-
-        // 1. Прямой доступ через initDataUnsafe
+        // 1. Прямой доступ из initDataUnsafe (для inline-кнопки)
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-			console.log("Пользователь определён:", tg.initDataUnsafe.user);
-            return tg.initDataUnsafe.user;    
+            console.log("Пользователь из initDataUnsafe:", tg.initDataUnsafe.user);
+            return tg.initDataUnsafe.user;
         }
 
-        // 2. Попытка распарсить initData (строка вида "user=...&hash=...")
-        if (tg.initData) {
-            try {
-				console.log("Парсим пользователя:", tg.initData);
-                const params = new URLSearchParams(tg.initData);
-                const userParam = params.get('user');
-                if (userParam) {
-                    return JSON.parse(decodeURIComponent(userParam));
-                }
-            } catch (e) {
-                console.error("Ошибка парсинга initData:", e);
-            }
+        // 2. Параметры URL (для Reply-кнопки)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+        if (userId) {
+            console.log("Пользователь из URL параметров:", userId);
+            return {
+                id: parseInt(userId, 10),
+                first_name: decodeURIComponent(urlParams.get('first_name') || ''),
+                username: decodeURIComponent(urlParams.get('username') || '')
+            };
         }
 
-		console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
+        console.warn("Не удалось определить пользователя");
         return null;
     }
 
-	const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
+    const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
     tgUser = getTelegramUser();
-	if (tgUser) {
-		document.getElementById('user-id').innerHTML = tgUser.id.toString();
-	    document.getElementById('user-name').innerHTML = tgUser.first_name || tgUser.username || 'Пользователь';
-	    document.getElementById('user-username').innerHTML = tgUser.username ? '@' + tgUser.username : '—';
-		displayQRCode('#qr-place', tgUser.id.toString(), 180, tgButtonColor);
-	} else {
-		document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
-		displayQRCode('#qr-place', 'Пользователь не известен', 180, tgButtonColor);
-	}
-	//if (tgUser && tgUser.id) {
-    //	console.log("Пользователь определён:", tgUser.id, tgUser.username);
-    //} else {
-    //    console.warn("Не удалось определить пользователя. tg:", tg, "initDataUnsafe:", tg?.initDataUnsafe, "initData:", tg?.initData);
-    //}
+
+    if (tgUser) {
+        document.getElementById('user-id').innerHTML = tgUser.id.toString();
+        document.getElementById('user-name').innerHTML = tgUser.first_name || 'Пользователь';
+        document.getElementById('user-username').innerHTML = tgUser.username ? '@' + tgUser.username : '—';
+        displayQRCode('#qr-place', tgUser.id.toString(), 180, tgButtonColor);
+    } else {
+        document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
+        displayQRCode('#qr-place', 'Пользователь не известен', 180, tgButtonColor);
+    }
 
     // Управление главной кнопкой Telegram
     function updateMainButton() {
@@ -200,7 +171,6 @@
         }
     }
 
-    // Сброс выбора продукта
     function resetSelection() {
         selectedProduct = null;
         const cardSelect = document.getElementById('card_programs');
@@ -212,7 +182,6 @@
         updateMainButton();
     }
 
-    // Обновление выбора программы Y-Карты
     function updateSelectedProgram() {
         const select = document.getElementById('card_programs');
         const selectedIndex = select.selectedIndex;
@@ -225,7 +194,6 @@
                 type: 'card',
                 level: item.level,
                 price: parseInt(item.price, 10),
-                //user: tgUser
             };
         } else {
             displayElement.textContent = 'Ничего не выбрано';
@@ -234,7 +202,6 @@
         updateMainButton();
     }
 
-    // Обновление выбора курса Y-MBA
     function updateSelectedCource() {
         const select = document.getElementById('Y_cources');
         const selectedIndex = select.selectedIndex;
@@ -247,7 +214,6 @@
                 type: 'mba',
                 level: item.level,
                 price: parseInt(item.price, 10),
-                //user: tgUser
             };
         } else {
             displayElement.textContent = 'Ничего не выбрано';
@@ -260,10 +226,7 @@
     fetch('content.json')
         .then(response => response.json())
         .then(jsonData => {
-            let data = jsonData;
-            //document.getElementById('txt3').innerHTML = data[3];
-
-            c_programs = data[5].product;
+            c_programs = jsonData[5].product;
             const select1 = document.getElementById('card_programs');
             for (const item of c_programs) {
                 const option = document.createElement('option');
@@ -272,7 +235,7 @@
                 select1.appendChild(option);
             }
 
-            y_cources = data[6];
+            y_cources = jsonData[6];
             const select2 = document.getElementById('Y_cources');
             for (const item of y_cources) {
                 const option = document.createElement('option');
@@ -283,7 +246,6 @@
         })
         .catch(err => console.error("Ошибка загрузки content.json:", err));
 
-    // Отслеживание смены вкладки
     function bindTabChange() {
         const tabs = document.querySelectorAll('input[name="tabs"]');
         tabs.forEach(tab => {
@@ -304,25 +266,24 @@
         bindTabChange();
         document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
-        updateSelectedProgram();  // начальное состояние
+        updateSelectedProgram();
         updateSelectedCource();
         if (tg) tg.MainButton.hide();
     });
 
-    // Настройка главной кнопки Telegram (только если tg существует)
+    // Настройка главной кнопки Telegram (отправка данных через sendData)
     if (tg) {
         tg.MainButton.setText("Купить");
         tg.MainButton.onClick(() => {
-			if (!selectedProduct) {
-				tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
-				return;
-			}
-			// Отправка данных боту (бот сам определит пользователя по message.chat.id)
-			tg.sendData(JSON.stringify(selectedProduct));
-			resetSelection();
+            if (!selectedProduct) {
+                tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
+                return;
+            }
+            // Отправка данных боту – для Reply-кнопки это работает!
+            tg.sendData(JSON.stringify(selectedProduct));
+            resetSelection();
         });
     } else {
-        // Если Telegram WebApp не загрузился, показываем сообщение при попытке купить
         document.addEventListener('click', (e) => {
             if (e.target.closest('.tg-main-button') || (selectedProduct && confirm("Купить? (Telegram WebApp не активен)"))) {
                 alert("Мини-приложение запущено вне Telegram. Покупка недоступна.");
