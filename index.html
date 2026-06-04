@@ -171,7 +171,8 @@
     tgUser = getTelegramUser();
 	if (tgUser) {
 		document.getElementById('user-id').innerHTML = tgUser.id.toString();
-		document.getElementById('user-name').innerHTML = tgUser.username.toString();
+	    document.getElementById('user-name').innerHTML = tgUser.first_name || tgUser.username || 'Пользователь';
+	    document.getElementById('user-username').innerHTML = tgUser.username ? '@' + tgUser.username : '—';
 		displayQRCode('#qr-place', tgUser.id.toString(), 180, tgButtonColor);
 	} else {
 		document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
