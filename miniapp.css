@@ -61,7 +61,7 @@ section {
   color: black;
 }
 
-input {
+input:not([type="radio"]) {
   display: none;
 }
 
