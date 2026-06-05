@@ -142,9 +142,9 @@ input:checked + label {
 .user-info {
     background: #ffffff;
     padding: 16px;
-    border-radius: 16px;   /* скругление как у многих Telegram-блоков */
+    border-radius: 16px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* мягкая тень, как у оферты */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     color: #000;
 }
 .user-info p {
@@ -163,7 +163,7 @@ input:checked + label {
     justify-content: center;
     align-items: center;
     margin-top: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* та же тень */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 550px) {
@@ -171,4 +171,37 @@ input:checked + label {
         flex-direction: column;
         gap: 12px;
     }
+}
+
+/* ========== СТИЛИ ДЛЯ БЛОКА ВЫБОРА ОПЛАТЫ (ДОБАВЛЕНО) ========== */
+.payment-method-block {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+.payment-method-block h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+.payment-method-block label {
+    display: inline-block;
+    margin: 0 15px 8px 0;
+    padding: 0;
+    font-weight: normal;
+    border: none;
+    font-size: 14px;
+    color: #000;
+    background: transparent;
+}
+.payment-method-block label:hover {
+    color: #1e6fdf;
+    cursor: pointer;
+}
+.payment-method-block input[type="radio"] {
+    margin-right: 5px;
+    vertical-align: middle;
 }
