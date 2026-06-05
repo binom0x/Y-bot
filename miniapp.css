@@ -130,9 +130,9 @@ input:checked + label {
   }
 }
 
-/* ========== СТИЛИ ДЛЯ ДАШБОРДА (КАК У ОФЕРТЫ) ========== */
+/* ========== СТИЛИ ДЛЯ ДАШБОРДА (КАК У ОФЕРТЫ С ТЕНЯМИ) ========== */
 .dashboard {
-    background: transparent; /* убираем затемнение, как на вкладке оферты */
+    background: transparent;
     border-radius: 0;
     padding: 0;
     margin-top: 10px;
@@ -140,11 +140,11 @@ input:checked + label {
 }
 
 .user-info {
-    background: #ffffff; /* чисто белый фон, как у обычного текста оферты */
+    background: #ffffff;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 16px;   /* скругление как у многих Telegram-блоков */
     margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* лёгкая тень для аккуратности */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* мягкая тень, как у оферты */
     color: #000;
 }
 .user-info p {
@@ -152,18 +152,18 @@ input:checked + label {
     font-size: 15px;
 }
 .user-info strong {
-    color: #1e6fdf; /* тёмно-синий из палитры Telegram */
+    color: #1e6fdf;
 }
 
 #qr-place {
-    background: #ffffff; /* белый фон под QR-код */
+    background: #ffffff;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* та же тень */
 }
 
 @media (max-width: 550px) {
