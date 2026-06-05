@@ -61,7 +61,7 @@ section {
   color: black;
 }
 
-input:not([type="radio"]) {
+input[id^="tab"] {
   display: none;
 }
 
