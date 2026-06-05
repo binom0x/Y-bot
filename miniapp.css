@@ -130,42 +130,40 @@ input:checked + label {
   }
 }
 
-/* ========== НОВЫЕ СТИЛИ ДЛЯ ДАШБОРДА ========== */
+/* ========== СТИЛИ ДЛЯ ДАШБОРДА (КАК У ОФЕРТЫ) ========== */
 .dashboard {
-    background: rgba(255, 255, 255, 0.2); /* чуть светлее, чтобы сохранить полупрозрачность */
-    border-radius: 12px;
-    padding: 16px;
+    background: transparent; /* убираем затемнение, как на вкладке оферты */
+    border-radius: 0;
+    padding: 0;
     margin-top: 10px;
-    backdrop-filter: blur(4px);
+    backdrop-filter: none;
 }
 
 .user-info {
-    background: rgba(255, 255, 255, 0.9); /* светлый фон */
-    padding: 12px;
-    border-radius: 10px;
+    background: #ffffff; /* чисто белый фон, как у обычного текста оферты */
+    padding: 16px;
+    border-radius: 12px;
     margin-bottom: 20px;
-    color: #000; /* чёрный текст для контраста */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* лёгкая тень для аккуратности */
+    color: #000;
 }
 .user-info p {
     margin: 8px 0;
     font-size: 15px;
 }
 .user-info strong {
-    color: #1e6fdf; /* тёмно-синий из палитры Telegram (button_color тёмный оттенок) */
-}
-
-.qr-place {
-    background: rgba(0, 0, 0, 0.2);
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+    color: #1e6fdf; /* тёмно-синий из палитры Telegram */
 }
 
 #qr-place {
+    background: #ffffff; /* белый фон под QR-код */
+    padding: 16px;
+    border-radius: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 @media (max-width: 550px) {
