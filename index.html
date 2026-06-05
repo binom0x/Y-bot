@@ -2,10 +2,8 @@
 <html>
 
 <head>
-    <!-- Подключаем библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <!--------------------------->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Y - Ваш ключ от будущего!</title>
@@ -14,7 +12,6 @@
 
 <body>
 
-<!-- Вкладки -->
 <main>
     <input id="tab1" type="radio" name="tabs" checked>
     <label for="tab1">Ваши данные</label>
@@ -48,7 +45,6 @@
             </select>
         </p>
         <p id="selected_program"></p>
-        <!-- Блок выбора способа оплаты для Y-Карты -->
         <div class="payment-method-block">
             <h3>Способ оплаты</h3>
             <label><input type="radio" name="payment_method_card" value="stars" checked> ⭐ Telegram Stars</label><br>
@@ -65,7 +61,6 @@
             </select>
         </p>
         <p id="selected_cource"></p>
-        <!-- Блок выбора способа оплаты для Y-MBA -->
         <div class="payment-method-block">
             <h3>Способ оплаты</h3>
             <label><input type="radio" name="payment_method_mba" value="stars" checked> ⭐ Telegram Stars</label><br>
@@ -109,17 +104,21 @@
         const canvas = document.createElement('canvas');
         target.appendChild(canvas);
 
-        QRCode.toCanvas(canvas, text, {
-            width: size,
-            margin: margin,
-            color: { dark: darkColor, light: lightColor },
-            errorCorrectionLevel: 'M'
-        }, (error) => {
-            if (error) {
-                console.error('Ошибка генерации QR:', error);
-                target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
-            }
-        });
+        try {
+            QRCode.toCanvas(canvas, text, {
+                width: size,
+                margin: margin,
+                color: { dark: darkColor, light: lightColor },
+                errorCorrectionLevel: 'M'
+            }, (error) => {
+                if (error) {
+                    console.error('Ошибка генерации QR:', error);
+                    target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
+                }
+            });
+        } catch(e) {
+            console.error("Ошибка canvas:", e);
+        }
     }
 
     // Инициализация Telegram WebApp
@@ -131,17 +130,13 @@
         console.error("Telegram WebApp не найден.");
     }
 
-    // Получение данных пользователя (сначала из initDataUnsafe, потом из URL)
+    // Получение данных пользователя
     function getTelegramUser() {
         if (!tg) return null;
-
-        // 1. Прямой доступ из initDataUnsafe (для inline-кнопки)
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             console.log("Пользователь из initDataUnsafe:", tg.initDataUnsafe.user);
             return tg.initDataUnsafe.user;
         }
-
-        // 2. Параметры URL (для Reply-кнопки)
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('user_id');
         if (userId) {
@@ -152,7 +147,6 @@
                 username: decodeURIComponent(urlParams.get('username') || '')
             };
         }
-
         console.warn("Не удалось определить пользователя");
         return null;
     }
@@ -170,7 +164,6 @@
         displayQRCode('#qr-place', 'Пользователь не известен', 180, tgButtonColor);
     }
 
-    // Получение выбранного способа оплаты в зависимости от активной вкладки
     function getSelectedPaymentMethod() {
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
         if (activeTabId === 'tab2') {
@@ -180,10 +173,9 @@
             const radio = document.querySelector('#content3 input[name="payment_method_mba"]:checked');
             return radio ? radio.value : 'stars';
         }
-        return 'stars'; // на всякий случай
+        return 'stars';
     }
 
-    // Управление главной кнопкой Telegram
     function updateMainButton() {
         if (!tg) return;
         if (!selectedProduct) {
@@ -193,13 +185,23 @@
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
         const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
         if (activeTabId === productTab) {
+            // Принудительно показываем кнопку и устанавливаем параметры
+            tg.MainButton.setParams({
+                is_visible: true,
+                is_active: true,
+                text: "Купить"
+            });
             tg.MainButton.show();
+            // Дополнительный fallback для Web-версии
+            setTimeout(() => {
+                if (tg && tg.MainButton) tg.MainButton.show();
+            }, 50);
         } else {
             tg.MainButton.hide();
         }
     }
 
-    function resetSelection() {
+    function clearSelectedProduct() {
         selectedProduct = null;
         const cardSelect = document.getElementById('card_programs');
         const courseSelect = document.getElementById('Y_cources');
@@ -278,7 +280,8 @@
         const tabs = document.querySelectorAll('input[name="tabs"]');
         tabs.forEach(tab => {
             tab.addEventListener('change', function() {
-                resetSelection();
+                // При смене вкладки НЕ сбрасываем выбранный продукт, а просто обновляем кнопку
+                updateMainButton();
             });
         });
     }
@@ -296,10 +299,17 @@
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
         updateSelectedProgram();
         updateSelectedCource();
-        if (tg) tg.MainButton.hide();
+        if (tg) {
+            tg.MainButton.setText("Купить");
+            tg.MainButton.hide();
+            // Небольшая задержка для Web-версии
+            setTimeout(() => {
+                updateMainButton();
+            }, 200);
+        }
     });
 
-    // Настройка главной кнопки Telegram (отправка данных через sendData)
+    // Настройка главной кнопки Telegram
     if (tg) {
         tg.MainButton.setText("Купить");
         tg.MainButton.onClick(() => {
@@ -307,9 +317,7 @@
                 tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
                 return;
             }
-            // Получаем выбранный способ оплаты
             const paymentMethod = getSelectedPaymentMethod();
-            // Формируем полные данные для отправки боту
             const payload = {
                 type: selectedProduct.type,
                 level: selectedProduct.level,
@@ -317,7 +325,7 @@
                 payment_method: paymentMethod
             };
             tg.sendData(JSON.stringify(payload));
-            resetSelection();
+            clearSelectedProduct(); // сброс после покупки
         });
     } else {
         document.addEventListener('click', (e) => {
