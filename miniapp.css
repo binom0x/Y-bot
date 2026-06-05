@@ -132,7 +132,7 @@ input:checked + label {
 
 /* ========== НОВЫЕ СТИЛИ ДЛЯ ДАШБОРДА ========== */
 .dashboard {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2); /* чуть светлее, чтобы сохранить полупрозрачность */
     border-radius: 12px;
     padding: 16px;
     margin-top: 10px;
@@ -140,17 +140,18 @@ input:checked + label {
 }
 
 .user-info {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.9); /* светлый фон */
     padding: 12px;
     border-radius: 10px;
     margin-bottom: 20px;
+    color: #000; /* чёрный текст для контраста */
 }
 .user-info p {
     margin: 8px 0;
     font-size: 15px;
 }
 .user-info strong {
-    color: #ffa500;
+    color: #1e6fdf; /* тёмно-синий из палитры Telegram (button_color тёмный оттенок) */
 }
 
 .qr-place {
