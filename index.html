@@ -31,6 +31,7 @@
     <section id="content1">
         <div class="dashboard">
             <div class="user-info">
+                <h2>👤 Личная информация</h2>
                 <p><strong>ID:</strong> <span id="user-id">—</span></p>
                 <p><strong>Имя:</strong> <span id="user-name">—</span></p>
                 <p><strong>Username:</strong> <span id="user-username">—</span></p>
@@ -47,6 +48,13 @@
             </select>
         </p>
         <p id="selected_program"></p>
+        <!-- Блок выбора способа оплаты для Y-Карты -->
+        <div class="payment-method-block">
+            <h3>Способ оплаты</h3>
+            <label><input type="radio" name="payment_method_card" value="stars" checked> ⭐ Telegram Stars</label><br>
+            <label><input type="radio" name="payment_method_card" value="card"> 💳 Банковская карта (Telegram)</label><br>
+            <label><input type="radio" name="payment_method_card" value="yoomoney"> 💰 YooMoney</label>
+        </div>
     </section>
 
     <section id="content3">
@@ -57,6 +65,13 @@
             </select>
         </p>
         <p id="selected_cource"></p>
+        <!-- Блок выбора способа оплаты для Y-MBA -->
+        <div class="payment-method-block">
+            <h3>Способ оплаты</h3>
+            <label><input type="radio" name="payment_method_mba" value="stars" checked> ⭐ Telegram Stars</label><br>
+            <label><input type="radio" name="payment_method_mba" value="card"> 💳 Банковская карта (Telegram)</label><br>
+            <label><input type="radio" name="payment_method_mba" value="yoomoney"> 💰 YooMoney</label>
+        </div>
     </section>
 
     <section id="content4">
@@ -153,6 +168,19 @@
     } else {
         document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
         displayQRCode('#qr-place', 'Пользователь не известен', 180, tgButtonColor);
+    }
+
+    // Получение выбранного способа оплаты в зависимости от активной вкладки
+    function getSelectedPaymentMethod() {
+        const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
+        if (activeTabId === 'tab2') {
+            const radio = document.querySelector('#content2 input[name="payment_method_card"]:checked');
+            return radio ? radio.value : 'stars';
+        } else if (activeTabId === 'tab3') {
+            const radio = document.querySelector('#content3 input[name="payment_method_mba"]:checked');
+            return radio ? radio.value : 'stars';
+        }
+        return 'stars'; // на всякий случай
     }
 
     // Управление главной кнопкой Telegram
@@ -279,8 +307,16 @@
                 tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
                 return;
             }
-            // Отправка данных боту – для Reply-кнопки это работает!
-            tg.sendData(JSON.stringify(selectedProduct));
+            // Получаем выбранный способ оплаты
+            const paymentMethod = getSelectedPaymentMethod();
+            // Формируем полные данные для отправки боту
+            const payload = {
+                type: selectedProduct.type,
+                level: selectedProduct.level,
+                price: selectedProduct.price,
+                payment_method: paymentMethod
+            };
+            tg.sendData(JSON.stringify(payload));
             resetSelection();
         });
     } else {
