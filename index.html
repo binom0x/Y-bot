@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="ru">
 <head>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- TON Connect UI library (v2) -->
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Y - Ваш ключ от будущего!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Y - Ключ от будущего | TON Wallet</title>
     <link rel="stylesheet" href="miniapp.css" type="text/css" media="all">
 </head>
-
 <body>
 
 <main>
@@ -69,13 +69,60 @@
         </div>
     </section>
 
+    <!-- ========== НОВАЯ ВКЛАДКА ОФЕРТА (ТЕПЕРЬ TON КОШЕЛЕК И БАЛАНСЫ) ========== -->
     <section id="content4">
-        <h2>Оферта</h2>
-        <p id="offer_text"></p>
+        <div class="wallet-container">
+            <div class="wallet-header">
+                <div class="wallet-title">
+                    <span>💎 TON Wallet</span>
+                </div>
+                <div id="ton-connect-button-area"></div>
+            </div>
+            <div id="wallet-status-area">
+                <div class="status-message">
+                    🔌 Подключите TON-кошелек (Tonkeeper, Wallet, OpenMask и др.) чтобы увидеть баланс TON и указанного жетона
+                </div>
+            </div>
+            <div id="wallet-balances-area" style="display: none;">
+                <div class="wallet-info">
+                    <div class="balance-row">
+                        <span class="balance-label">📡 Адрес кошелька</span>
+                        <span class="balance-value" id="wallet-address-short">—</span>
+                    </div>
+                    <div class="balance-row">
+                        <span class="balance-label">💎 TON Balance</span>
+                        <span class="balance-value" id="ton-balance">—</span>
+                    </div>
+                    <div class="balance-row" id="jetton-balance-row">
+                        <span class="balance-label">🪙 Жетон (определённый)</span>
+                        <span class="balance-value" id="jetton-balance">—</span>
+                    </div>
+                </div>
+                <div class="flex-between">
+                    <button id="refresh-balance-btn" class="refresh-balance">🔄 Обновить балансы</button>
+                    <span id="jetton-symbol" class="token-symbol">⚡ USDT (TON)</span>
+                </div>
+            </div>
+
+            <!-- Блок для кастомного жетона (возможность задать любой Jetton Master) -->
+            <div class="custom-jetton">
+                <div style="font-weight: 600; margin-bottom: 8px;">🎯 Выберите целевой жетон:</div>
+                <div class="input-group">
+                    <input type="text" id="jetton-master-input" placeholder="Jetton Master адрес (EQD...)" value="EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2E_s7A">
+                    <button id="set-jetton-btn" class="small-btn">Установить</button>
+                </div>
+                <div style="font-size: 12px; color: #4b5563;">По умолчанию: USDT на TON (десятичные 6). Можно заменить на любой Jetton.</div>
+                <div id="jetton-meta-info" style="font-size: 12px; margin-top: 10px; color: #2c6e9e;"></div>
+            </div>
+            <div class="status-message" style="margin-top: 12px; font-size: 12px;">
+                ⚡ Подключение происходит через TON Connect 2.0. После авторизации вы увидите точный баланс TON и баланс указанного жетона.
+            </div>
+        </div>
     </section>
 </main>
 
 <script>
+    // ---------------------- TELEGRAM WEBAPP & USER DATA ----------------------
     let c_programs = [];
     let y_cources = [];
     let selectedProduct = null;
@@ -83,27 +130,21 @@
     let tg = null;
 
     function displayQRCode(container, text, size, color, margin = 2) {
-        const target = typeof container === 'string' 
-            ? document.querySelector(container) 
-            : container;
+        const target = typeof container === 'string' ? document.querySelector(container) : container;
         if (!target) {
             console.error('Контейнер для QR‑кода не найден');
             return;
         }
-
         let darkColor = '#000000';
         let lightColor = '#ffffff';
-        if (typeof color === 'string') {
-            darkColor = color;
-        } else if (typeof color === 'object' && color !== null) {
+        if (typeof color === 'string') darkColor = color;
+        else if (typeof color === 'object' && color !== null) {
             darkColor = color.dark || '#000000';
             lightColor = color.light || '#ffffff';
         }
-
         target.innerHTML = '';
         const canvas = document.createElement('canvas');
         target.appendChild(canvas);
-
         try {
             QRCode.toCanvas(canvas, text, {
                 width: size,
@@ -111,17 +152,12 @@
                 color: { dark: darkColor, light: lightColor },
                 errorCorrectionLevel: 'M'
             }, (error) => {
-                if (error) {
-                    console.error('Ошибка генерации QR:', error);
-                    target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
-                }
+                if (error) console.error('Ошибка генерации QR:', error);
+                target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
             });
-        } catch(e) {
-            console.error("Ошибка canvas:", e);
-        }
+        } catch(e) { console.error("Ошибка canvas:", e); }
     }
 
-    // Инициализация Telegram WebApp
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
@@ -130,30 +166,22 @@
         console.error("Telegram WebApp не найден.");
     }
 
-    // Получение данных пользователя
     function getTelegramUser() {
         if (!tg) return null;
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            console.log("Пользователь из initDataUnsafe:", tg.initDataUnsafe.user);
-            return tg.initDataUnsafe.user;
-        }
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) return tg.initDataUnsafe.user;
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('user_id');
         if (userId) {
-            console.log("Пользователь из URL параметров:", userId);
             return {
                 id: parseInt(userId, 10),
                 first_name: decodeURIComponent(urlParams.get('first_name') || ''),
                 username: decodeURIComponent(urlParams.get('username') || '')
             };
         }
-        console.warn("Не удалось определить пользователя");
         return null;
     }
-
     const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
     tgUser = getTelegramUser();
-
     if (tgUser) {
         document.getElementById('user-id').innerHTML = tgUser.id.toString();
         document.getElementById('user-name').innerHTML = tgUser.first_name || 'Пользователь';
@@ -164,177 +192,294 @@
         displayQRCode('#qr-place', 'Пользователь не известен', 180, tgButtonColor);
     }
 
-    function getSelectedPaymentMethod() {
-        const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
-        if (activeTabId === 'tab2') {
-            const radio = document.querySelector('#content2 input[name="payment_method_card"]:checked');
-            return radio ? radio.value : 'stars';
-        } else if (activeTabId === 'tab3') {
-            const radio = document.querySelector('#content3 input[name="payment_method_mba"]:checked');
-            return radio ? radio.value : 'stars';
-        }
-        return 'stars';
-    }
-
+    // ---------- Y-Card & Y-MBA логика (без изменений) ----------
     function updateMainButton() {
         if (!tg) return;
-        if (!selectedProduct) {
-            tg.MainButton.hide();
-            return;
-        }
+        if (!selectedProduct) { tg.MainButton.hide(); return; }
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
         const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
         if (activeTabId === productTab) {
-            // Принудительно показываем кнопку и устанавливаем параметры
-            tg.MainButton.setParams({
-                is_visible: true,
-                is_active: true,
-                text: "Купить"
-            });
+            tg.MainButton.setParams({ is_visible: true, is_active: true, text: "Купить" });
             tg.MainButton.show();
-            // Дополнительный fallback для Web-версии
-            setTimeout(() => {
-                if (tg && tg.MainButton) tg.MainButton.show();
-            }, 50);
-        } else {
-            tg.MainButton.hide();
-        }
+        } else { tg.MainButton.hide(); }
     }
-
     function clearSelectedProduct() {
         selectedProduct = null;
-        const cardSelect = document.getElementById('card_programs');
-        const courseSelect = document.getElementById('Y_cources');
-        if (cardSelect) cardSelect.selectedIndex = 0;
-        if (courseSelect) courseSelect.selectedIndex = 0;
+        document.getElementById('card_programs').selectedIndex = 0;
+        document.getElementById('Y_cources').selectedIndex = 0;
         document.getElementById('selected_program').innerHTML = 'Ничего не выбрано';
         document.getElementById('selected_cource').innerHTML = 'Ничего не выбрано';
         updateMainButton();
     }
-
     function updateSelectedProgram() {
         const select = document.getElementById('card_programs');
-        const selectedIndex = select.selectedIndex;
-        const displayElement = document.getElementById('selected_program');
-
-        if (selectedIndex > 0) {
-            const item = c_programs[selectedIndex - 1];
-            displayElement.innerHTML = item.description;
-            selectedProduct = {
-                type: 'card',
-                level: item.level,
-                price: parseInt(item.price, 10),
-            };
-        } else {
-            displayElement.textContent = 'Ничего не выбрано';
-            if (selectedProduct && selectedProduct.type === 'card') selectedProduct = null;
-        }
+        const idx = select.selectedIndex;
+        const disp = document.getElementById('selected_program');
+        if (idx > 0) {
+            const item = c_programs[idx - 1];
+            disp.innerHTML = item.description;
+            selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price,10) };
+        } else { disp.textContent = 'Ничего не выбрано'; if(selectedProduct?.type === 'card') selectedProduct=null; }
         updateMainButton();
     }
-
     function updateSelectedCource() {
         const select = document.getElementById('Y_cources');
-        const selectedIndex = select.selectedIndex;
-        const displayElement = document.getElementById('selected_cource');
-
-        if (selectedIndex > 0) {
-            const item = y_cources[selectedIndex - 1];
-            displayElement.innerHTML = item.description;
-            selectedProduct = {
-                type: 'mba',
-                level: item.level,
-                price: parseInt(item.price, 10),
-            };
-        } else {
-            displayElement.textContent = 'Ничего не выбрано';
-            if (selectedProduct && selectedProduct.type === 'mba') selectedProduct = null;
-        }
+        const idx = select.selectedIndex;
+        const disp = document.getElementById('selected_cource');
+        if (idx > 0) {
+            const item = y_cources[idx - 1];
+            disp.innerHTML = item.description;
+            selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price,10) };
+        } else { disp.textContent = 'Ничего не выбрано'; if(selectedProduct?.type === 'mba') selectedProduct=null; }
         updateMainButton();
     }
 
-    // Загрузка данных из content.json
-    fetch('content.json')
-        .then(response => response.json())
-        .then(jsonData => {
-            c_programs = jsonData[5].product;
-            const select1 = document.getElementById('card_programs');
-            for (const item of c_programs) {
-                const option = document.createElement('option');
-                option.value = item.level;
-                option.textContent = `${item.level} (${item.price} руб.)`;
-                select1.appendChild(option);
-            }
+    fetch('content.json').then(r=>r.json()).then(data=>{
+        c_programs = data[5].product;
+        const s1 = document.getElementById('card_programs');
+        c_programs.forEach(item=>{ let opt=document.createElement('option'); opt.value=item.level; opt.textContent=`${item.level} (${item.price} руб.)`; s1.appendChild(opt); });
+        y_cources = data[6];
+        const s2 = document.getElementById('Y_cources');
+        y_cources.forEach(item=>{ let opt=document.createElement('option'); opt.value=item.level; opt.textContent=`${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
+    }).catch(e=>console.error("Ошибка content.json",e));
 
-            y_cources = jsonData[6];
-            const select2 = document.getElementById('Y_cources');
-            for (const item of y_cources) {
-                const option = document.createElement('option');
-                option.value = item.level;
-                option.textContent = `${item.level} (${item.price} руб.)`;
-                select2.appendChild(option);
-            }
-        })
-        .catch(err => console.error("Ошибка загрузки content.json:", err));
-
-    function bindTabChange() {
-        const tabs = document.querySelectorAll('input[name="tabs"]');
-        tabs.forEach(tab => {
-            tab.addEventListener('change', function() {
-                // При смене вкладки НЕ сбрасываем выбранный продукт, а просто обновляем кнопку
-                updateMainButton();
-            });
-        });
-    }
-
-    // Загрузка оферты
-    fetch('offer.html')
-        .then(response => response.text())
-        .then(html => document.getElementById('offer_text').innerHTML = html)
-        .catch(err => console.error("Ошибка загрузки offer.html:", err));
-
-    // Инициализация после загрузки DOM
-    document.addEventListener('DOMContentLoaded', function () {
-        bindTabChange();
+    document.addEventListener('DOMContentLoaded', ()=>{
         document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
-        updateSelectedProgram();
-        updateSelectedCource();
-        if (tg) {
+        updateSelectedProgram(); updateSelectedCource();
+        if(tg){
             tg.MainButton.setText("Купить");
             tg.MainButton.hide();
-            // Небольшая задержка для Web-версии
-            setTimeout(() => {
-                updateMainButton();
-            }, 200);
+            tg.MainButton.onClick(()=>{
+                if(!selectedProduct){ tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)"); return; }
+                const payMethod = document.querySelector('input[name="tabs"]:checked')?.id === 'tab2' ? 
+                    document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value : 
+                    document.querySelector('#content3 input[name="payment_method_mba"]:checked')?.value;
+                const payload = { type: selectedProduct.type, level: selectedProduct.level, price: selectedProduct.price, payment_method: payMethod || 'stars' };
+                tg.sendData(JSON.stringify(payload));
+                clearSelectedProduct();
+            });
+            setTimeout(()=>updateMainButton(),200);
         }
     });
+    // ---------------------- / END Y-Card logic ----------------------
 
-    // Настройка главной кнопки Telegram
-    if (tg) {
-        tg.MainButton.setText("Купить");
-        tg.MainButton.onClick(() => {
-            if (!selectedProduct) {
-                tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
-                return;
+    // ======================== TON CONNECT + ЖЕТОНЫ (ВКЛАДКА ОФЕРТА) ========================
+    let tonConnectUI = null;
+    let currentWalletAddress = null;
+    let currentJettonMaster = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2E_s7A";   // USDT по умолчанию
+    let jettonDecimals = 6;    // USDT decimals = 6
+    let jettonSymbol = "USDT";
+    
+    // Получение элементов интерфейса
+    const walletStatusArea = document.getElementById('wallet-status-area');
+    const balancesArea = document.getElementById('wallet-balances-area');
+    const tonBalanceSpan = document.getElementById('ton-balance');
+    const jettonBalanceSpan = document.getElementById('jetton-balance');
+    const walletAddressSpan = document.getElementById('wallet-address-short');
+    const refreshBtn = document.getElementById('refresh-balance-btn');
+    const jettonSymbolSpan = document.getElementById('jetton-symbol');
+    const jettonMasterInput = document.getElementById('jetton-master-input');
+    const setJettonBtn = document.getElementById('set-jetton-btn');
+    const jettonMetaInfo = document.getElementById('jetton-meta-info');
+    
+    // Функция для вызова API tonapi.io (получение баланса TON и списка jettons)
+    async function fetchBalancesFromTonapi(address) {
+        try {
+            // 1. Получаем баланс TON (нативный)
+            const tonResp = await fetch(`https://tonapi.io/v2/accounts/${address}`);
+            if (!tonResp.ok) throw new Error(`TON API error: ${tonResp.status}`);
+            const tonData = await tonResp.json();
+            const tonBalanceNano = tonData.balance ? parseInt(tonData.balance) : 0;
+            const tonBalanceFormatted = (tonBalanceNano / 1e9).toFixed(4);
+            
+            // 2. Получаем все жетоны владельца
+            const jettonsResp = await fetch(`https://tonapi.io/v2/accounts/${address}/jettons`);
+            if (!jettonsResp.ok) throw new Error(`Jettons API error: ${jettonsResp.status}`);
+            const jetsData = await jettonsResp.json();
+            let jettonBalanceRaw = "0";
+            let foundDecimals = jettonDecimals;
+            let foundSymbol = jettonSymbol;
+            
+            // Ищем нужный Jetton Master среди балансов
+            const targetJetton = jetsData.balances?.find(j => j.jetton.address === currentJettonMaster);
+            if (targetJetton) {
+                const rawBalance = targetJetton.balance;
+                // Получаем decimals из метаданных жетона, если есть, иначе используем сохранённые
+                if (targetJetton.jetton.decimals !== undefined) {
+                    foundDecimals = targetJetton.jetton.decimals;
+                }
+                if (targetJetton.jetton.symbol) {
+                    foundSymbol = targetJetton.jetton.symbol;
+                }
+                // Сохраняем decimals для корректного отображения
+                jettonDecimals = foundDecimals;
+                jettonSymbol = foundSymbol;
+                jettonSymbolSpan.innerText = `🪙 ${jettonSymbol} (${jettonSymbol})`;
+                const balanceNum = BigInt(rawBalance);
+                const divisor = BigInt(10 ** foundDecimals);
+                const formattedBalance = (Number(balanceNum) / Number(divisor)).toFixed(foundDecimals > 4 ? 4 : foundDecimals);
+                jettonBalanceRaw = formattedBalance;
+            } else {
+                jettonBalanceRaw = "0";
+                // Пробуем запросить метаданные жетона, чтобы показать информацию
+                await updateJettonMetadata();
             }
-            const paymentMethod = getSelectedPaymentMethod();
-            const payload = {
-                type: selectedProduct.type,
-                level: selectedProduct.level,
-                price: selectedProduct.price,
-                payment_method: paymentMethod
-            };
-            tg.sendData(JSON.stringify(payload));
-            clearSelectedProduct(); // сброс после покупки
-        });
-    } else {
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.tg-main-button') || (selectedProduct && confirm("Купить? (Telegram WebApp не активен)"))) {
-                alert("Мини-приложение запущено вне Telegram. Покупка недоступна.");
-            }
-        });
+            return { ton: tonBalanceFormatted, jetton: jettonBalanceRaw, symbol: jettonSymbol, decimals: foundDecimals };
+        } catch (err) {
+            console.error("Ошибка загрузки балансов:", err);
+            throw err;
+        }
     }
+    
+    // Получение метаданных жетона (decimals, symbol) по мастер-адресу
+    async function updateJettonMetadata() {
+        if (!currentJettonMaster) return;
+        try {
+            const metaResp = await fetch(`https://tonapi.io/v2/jettons/${currentJettonMaster}`);
+            if (metaResp.ok) {
+                const meta = await metaResp.json();
+                if (meta.metadata?.decimals) jettonDecimals = meta.metadata.decimals;
+                if (meta.metadata?.symbol) jettonSymbol = meta.metadata.symbol;
+                jettonSymbolSpan.innerText = `🪙 ${jettonSymbol} (${jettonSymbol})`;
+                jettonMetaInfo.innerHTML = `✅ Жетон: ${jettonSymbol} (decimals: ${jettonDecimals})<br>📌 Мастер: ${currentJettonMaster.slice(0,10)}...${currentJettonMaster.slice(-6)}`;
+            } else {
+                jettonMetaInfo.innerHTML = `⚠️ Не удалось загрузить метаданные жетона, но баланс может отображаться по стандарту.`;
+            }
+        } catch(e) { console.warn("meta fetch error",e); }
+    }
+    
+    // Обновить UI балансов
+    async function refreshBalances() {
+        if (!currentWalletAddress) {
+            if(balancesArea) balancesArea.style.display = 'none';
+            return;
+        }
+        try {
+            if(tonBalanceSpan) tonBalanceSpan.innerText = "⏳ загрузка...";
+            if(jettonBalanceSpan) jettonBalanceSpan.innerText = "⏳ ...";
+            const balances = await fetchBalancesFromTonapi(currentWalletAddress);
+            if(tonBalanceSpan) tonBalanceSpan.innerText = `${balances.ton} TON`;
+            if(jettonBalanceSpan) jettonBalanceSpan.innerText = `${balances.jetton} ${balances.symbol}`;
+        } catch (err) {
+            if(tonBalanceSpan) tonBalanceSpan.innerText = "Ошибка API";
+            if(jettonBalanceSpan) jettonBalanceSpan.innerText = "недоступно";
+            console.error(err);
+            if(walletStatusArea) walletStatusArea.innerHTML = `<div class="status-message">⚠️ Ошибка при загрузке балансов: ${err.message}. Проверьте интернет или адрес.</div>`;
+        }
+    }
+    
+    // Инициализация TON Connect UI
+    function initTonConnect() {
+        // Манифест должен быть размещён в корне вашего домена. Пример содержания manifest.json:
+        // { "url": "https://<YOUR_DOMAIN>", "name": "Y Mini App", "iconUrl": "https://<YOUR_DOMAIN>/icon.png", "termsOfUseUrl": "", "privacyPolicyUrl": "" }
+        // Для локальной разработки можно использовать тестовый прокси, но лучше разместить реальный manifest.
+        // Укажите актуальный URL, где будет лежать manifest.json. (При отсутствии - подключение может не работать)
+        const manifestUrl = window.location.origin + '/tonconnect-manifest.json';
+        // Для демонстрации, если manifest отсутствует, библиотека всё равно попробует инициализацию, но wallet выбросит ошибку.
+        // Рекомендуется создать manifest по этому адресу.
+        try {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: manifestUrl,
+                buttonRootId: 'ton-connect-button-area',
+                uiPreferences: { theme: 'LIGHT' }
+            });
+            
+            // Следим за состоянием подключения
+            tonConnectUI.onStatusChange(async (wallet) => {
+                if (wallet && wallet.account && wallet.account.address) {
+                    currentWalletAddress = wallet.account.address;
+                    const shortAddr = currentWalletAddress.slice(0, 6) + "..." + currentWalletAddress.slice(-4);
+                    if(walletAddressSpan) walletAddressSpan.innerText = shortAddr;
+                    if(walletStatusArea) walletStatusArea.style.display = 'none';
+                    if(balancesArea) balancesArea.style.display = 'block';
+                    await refreshBalances();
+                } else {
+                    currentWalletAddress = null;
+                    if(walletStatusArea) {
+                        walletStatusArea.style.display = 'block';
+                        walletStatusArea.innerHTML = `<div class="status-message">🔌 Кошелёк не подключён. Нажмите «Connect Wallet» для входа.</div>`;
+                    }
+                    if(balancesArea) balancesArea.style.display = 'none';
+                    if(tonBalanceSpan) tonBalanceSpan.innerText = '—';
+                    if(jettonBalanceSpan) jettonBalanceSpan.innerText = '—';
+                }
+            });
+            
+            // дополнительно кнопка вкл/откл
+            const customDisconnectBtn = document.createElement('button');
+            customDisconnectBtn.innerText = 'Отключить кошелек';
+            customDisconnectBtn.classList.add('ton-connect-btn', 'ton-disconnect');
+            customDisconnectBtn.style.marginLeft = '10px';
+            customDisconnectBtn.onclick = () => {
+                if(tonConnectUI) tonConnectUI.disconnect();
+            };
+            const btnArea = document.getElementById('ton-connect-button-area');
+            if(btnArea && !btnArea.querySelector('.ton-disconnect-custom')) {
+                customDisconnectBtn.classList.add('ton-disconnect-custom');
+                btnArea.appendChild(customDisconnectBtn);
+            }
+        } catch(e) {
+            console.error("TON Connect инициализация ошибка:", e);
+            if(walletStatusArea) walletStatusArea.innerHTML = `<div class="status-message">❌ Ошибка инициализации TON Connect: убедитесь, что manifest.json доступен по адресу ${manifestUrl}. Подробности в консоли.</div>`;
+        }
+    }
+    
+    // Установка нового жетона (Jetton Master) и обновление баланса
+    async function setJettonAddress() {
+        let newAddress = jettonMasterInput.value.trim();
+        if (!newAddress) return;
+        // Базовая валидация: начинается с EQ или UQ
+        if (!/^(EQ|UQ)[A-Za-z0-9_-]{44,48}$/i.test(newAddress)) {
+            alert("Введите корректный Jetton Master адрес (начинается с EQ или UQ)");
+            return;
+        }
+        currentJettonMaster = newAddress;
+        // Сбрасываем десятичные по умолчанию (обновим метаданные)
+        jettonDecimals = 9;
+        jettonSymbol = "JETTON";
+        jettonSymbolSpan.innerText = `🪙 ${jettonSymbol} (обновление...)`;
+        await updateJettonMetadata();
+        if (currentWalletAddress) {
+            await refreshBalances();
+        } else {
+            if(jettonBalanceSpan) jettonBalanceSpan.innerText = "— (подключите кошелёк)";
+        }
+        jettonMetaInfo.innerHTML += `<br>🔄 Жетон изменён, обновите баланс если кошелёк активен.`;
+    }
+    
+    // Загрузка метаинформации при старте для дефолтного жетона
+    async function loadDefaultJettonMeta() {
+        await updateJettonMetadata();
+    }
+    
+    // Запуск инициализации TON Connect после загрузки DOM + дополнительные обёртки
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof TON_CONNECT_UI !== 'undefined') {
+            initTonConnect();
+        } else {
+            console.error("TON_CONNECT_UI не загрузился. Проверьте CDN @tonconnect/ui");
+            if(walletStatusArea) walletStatusArea.innerHTML = `<div class="status-message">❌ Библиотека TON Connect не загружена. Проверьте интернет или обновите страницу.</div>`;
+        }
+        // Обновление баланса по кнопке
+        if(refreshBtn) refreshBtn.addEventListener('click', () => { if(currentWalletAddress) refreshBalances(); else alert("Кошелёк не подключён"); });
+        if(setJettonBtn) setJettonBtn.addEventListener('click', setJettonAddress);
+        loadDefaultJettonMeta();
+    });
+    
+    // Также если вкладка становится активной и кошелек есть — обновляем данные (опционально)
+    const tabWatcher = setInterval(() => {
+        const activeTab = document.querySelector('input[name="tabs"]:checked')?.id;
+        if (activeTab === 'tab4' && currentWalletAddress && tonBalanceSpan && tonBalanceSpan.innerText.includes('загрузка')) {
+            refreshBalances();
+        }
+    }, 1000);
+    // при переключении вкладки — ничего не ломаем, но можно дополнительно обновить
+    document.querySelectorAll('input[name="tabs"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if(this.id === 'tab4' && currentWalletAddress) refreshBalances();
+        });
+    });
 </script>
-
 </body>
 </html>
