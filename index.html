@@ -9,7 +9,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Y - Ваш ключ от будущего!</title>
     <link rel="stylesheet" href="miniapp.css" type="text/css" media="all">
-
 </head>
 
 <body>
@@ -53,12 +52,11 @@
             <label><input type="radio" name="payment_method_card" value="card"> 💳 Банковская карта (Telegram)</label><br>
             <label><input type="radio" name="payment_method_card" value="yoomoney"> 💰 YooMoney</label>
         </div>
-        <!-- Блок согласия с офертой для Y-Карты -->
         <div class="offer-agreement">
             <input type="checkbox" id="agree-offer-card">
             <label for="agree-offer-card">
                 Я ознакомлен(а) и согласен(сна) с условиями 
-                <a href="#" id="show-offer-card-link" class="offer-link">Публичной оферты</a>
+                <a href="javascript:void(0)" id="show-offer-card-link" class="offer-link">Публичной оферты</a>
             </label>
         </div>
     </section>
@@ -77,12 +75,11 @@
             <label><input type="radio" name="payment_method_mba" value="card"> 💳 Банковская карта (Telegram)</label><br>
             <label><input type="radio" name="payment_method_mba" value="yoomoney"> 💰 YooMoney</label>
         </div>
-        <!-- Блок согласия с офертой для Y-MBA -->
         <div class="offer-agreement">
             <input type="checkbox" id="agree-offer-mba">
             <label for="agree-offer-mba">
                 Я ознакомлен(а) и согласен(сна) с условиями 
-                <a href="#" id="show-offer-mba-link" class="offer-link">Публичной оферты</a>
+                <a href="javascript:void(0)" id="show-offer-mba-link" class="offer-link">Публичной оферты</a>
             </label>
         </div>
     </section>
@@ -117,9 +114,8 @@
     let selectedProduct = null;
     let tgUser = null;
     let tg = null;
-    let cachedOfferHTML = null;   // Храним текст оферты после загрузки
+    let cachedOfferHTML = null;
 
-    // Функция для отображения QR (оставлена без изменений)
     function displayQRCode(container, text, size, color, margin = 2) {
         const target = typeof container === 'string' 
             ? document.querySelector(container) 
@@ -128,7 +124,6 @@
             console.error('Контейнер для QR‑кода не найден');
             return;
         }
-
         let darkColor = '#000000';
         let lightColor = '#ffffff';
         if (typeof color === 'string') {
@@ -137,11 +132,9 @@
             darkColor = color.dark || '#000000';
             lightColor = color.light || '#ffffff';
         }
-
         target.innerHTML = '';
         const canvas = document.createElement('canvas');
         target.appendChild(canvas);
-
         try {
             QRCode.toCanvas(canvas, text, {
                 width: size,
@@ -159,7 +152,6 @@
         }
     }
 
-    // Инициализация Telegram WebApp
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
@@ -168,24 +160,20 @@
         console.error("Telegram WebApp не найден.");
     }
 
-    // Получение данных пользователя
     function getTelegramUser() {
         if (!tg) return null;
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            console.log("Пользователь из initDataUnsafe:", tg.initDataUnsafe.user);
             return tg.initDataUnsafe.user;
         }
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('user_id');
         if (userId) {
-            console.log("Пользователь из URL параметров:", userId);
             return {
                 id: parseInt(userId, 10),
                 first_name: decodeURIComponent(urlParams.get('first_name') || ''),
                 username: decodeURIComponent(urlParams.get('username') || '')
             };
         }
-        console.warn("Не удалось определить пользователя");
         return null;
     }
 
@@ -214,7 +202,6 @@
         return 'stars';
     }
 
-    // ОБНОВЛЕННАЯ функция управления главной кнопкой: проверяет не только продукт, но и согласие с офертой на активной вкладке
     function updateMainButton() {
         if (!tg) return;
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
@@ -223,9 +210,7 @@
             return;
         }
         const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
-        // Показываем кнопку только если мы на той вкладке, где выбран продукт
         if (activeTabId === productTab) {
-            // Проверка: прочитана ли оферта (чекбокс)
             let isOfferAccepted = false;
             if (selectedProduct.type === 'card') {
                 const chk = document.getElementById('agree-offer-card');
@@ -234,16 +219,10 @@
                 const chk = document.getElementById('agree-offer-mba');
                 isOfferAccepted = chk ? chk.checked : false;
             }
-            
             if (isOfferAccepted) {
-                tg.MainButton.setParams({
-                    is_visible: true,
-                    is_active: true,
-                    text: "Купить"
-                });
+                tg.MainButton.setParams({ is_visible: true, is_active: true, text: "Купить" });
                 tg.MainButton.show();
             } else {
-                // Если согласие не получено — кнопка скрыта
                 tg.MainButton.hide();
             }
         } else {
@@ -266,15 +245,10 @@
         const select = document.getElementById('card_programs');
         const selectedIndex = select.selectedIndex;
         const displayElement = document.getElementById('selected_program');
-
         if (selectedIndex > 0) {
             const item = c_programs[selectedIndex - 1];
             displayElement.innerHTML = item.description;
-            selectedProduct = {
-                type: 'card',
-                level: item.level,
-                price: parseInt(item.price, 10),
-            };
+            selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price, 10) };
         } else {
             displayElement.textContent = 'Ничего не выбрано';
             if (selectedProduct && selectedProduct.type === 'card') selectedProduct = null;
@@ -286,15 +260,10 @@
         const select = document.getElementById('Y_cources');
         const selectedIndex = select.selectedIndex;
         const displayElement = document.getElementById('selected_cource');
-
         if (selectedIndex > 0) {
             const item = y_cources[selectedIndex - 1];
             displayElement.innerHTML = item.description;
-            selectedProduct = {
-                type: 'mba',
-                level: item.level,
-                price: parseInt(item.price, 10),
-            };
+            selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price, 10) };
         } else {
             displayElement.textContent = 'Ничего не выбрано';
             if (selectedProduct && selectedProduct.type === 'mba') selectedProduct = null;
@@ -302,7 +271,6 @@
         updateMainButton();
     }
 
-    // Загрузка данных из content.json
     fetch('content.json')
         .then(response => response.json())
         .then(jsonData => {
@@ -314,7 +282,6 @@
                 option.textContent = `${item.level} (${item.price} руб.)`;
                 select1.appendChild(option);
             }
-
             y_cources = jsonData[6];
             const select2 = document.getElementById('Y_cources');
             for (const item of y_cources) {
@@ -326,59 +293,41 @@
         })
         .catch(err => console.error("Ошибка загрузки content.json:", err));
 
-    // --- ОФЕРТА: загрузка, кэширование и управление модальным окном ---
     function loadAndCacheOffer() {
         if (cachedOfferHTML) return Promise.resolve(cachedOfferHTML);
         return fetch('offer.html')
-            .then(response => {
-                if (!response.ok) throw new Error('Не удалось загрузить оферту');
-                return response.text();
-            })
-            .then(html => {
-                cachedOfferHTML = html;
-                return cachedOfferHTML;
-            })
-            .catch(err => {
-                console.error("Ошибка загрузки offer.html:", err);
-                cachedOfferHTML = '<div style="color:red; padding:20px;">⚠️ Не удалось загрузить текст оферты. Пожалуйста, попробуйте позже.</div>';
-                return cachedOfferHTML;
-            });
+            .then(response => { if (!response.ok) throw new Error(); return response.text(); })
+            .then(html => { cachedOfferHTML = html; return cachedOfferHTML; })
+            .catch(() => { cachedOfferHTML = '<div style="color:red; padding:20px;">⚠️ Не удалось загрузить текст оферты.</div>'; return cachedOfferHTML; });
     }
 
-    // Показать модальное окно с офертой
     function showOfferModal() {
         const modal = document.getElementById('offerModal');
         const modalBody = document.getElementById('modalOfferBody');
-        if (!modal || !modalBody) return;
-        
-        // Если уже есть загруженный HTML — показываем сразу, иначе показываем загрузку и загружаем
+        if (!modal) return;
         if (cachedOfferHTML) {
             modalBody.innerHTML = cachedOfferHTML;
         } else {
-            modalBody.innerHTML = '<div style="text-align:center; padding: 30px;">⏳ Загрузка условий оферты...</div>';
-            loadAndCacheOffer().then(html => {
-                modalBody.innerHTML = html;
-            });
+            modalBody.innerHTML = '<div style="text-align:center; padding: 30px;">⏳ Загрузка...</div>';
+            loadAndCacheOffer().then(html => { modalBody.innerHTML = html; });
         }
+        modal.classList.add('show-modal');  // гарантия отображения
         modal.style.display = 'flex';
     }
 
     function closeOfferModal() {
         const modal = document.getElementById('offerModal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.classList.remove('show-modal');
+            modal.style.display = 'none';
+        }
     }
 
-    // Загружаем оферту заранее в фоне (кэшируем)
     loadAndCacheOffer();
 
-    // Обработчики для ссылок "Публичная оферта" на каждой вкладке
-    document.addEventListener('click', function(e) {
-        if (e.target && e.target.classList && e.target.classList.contains('offer-link')) {
-            e.preventDefault();
-            showOfferModal();
-        }
-    });
-    // Закрытие модалки (крестик и клик по фону)
+    // Прямая привязка к ссылкам
+    document.getElementById('show-offer-card-link')?.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(); });
+    document.getElementById('show-offer-mba-link')?.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(); });
     const closeBtn = document.getElementById('closeModalBtn');
     if (closeBtn) closeBtn.onclick = closeOfferModal;
     window.onclick = function(event) {
@@ -386,119 +335,60 @@
         if (event.target === modal) closeOfferModal();
     };
 
-    // Функция для привязки обновления кнопки к чекбоксам
     function bindAgreementCheckboxes() {
         const cardCheckbox = document.getElementById('agree-offer-card');
         const mbaCheckbox = document.getElementById('agree-offer-mba');
-        if (cardCheckbox) {
-            cardCheckbox.addEventListener('change', () => {
-                // При изменении чекбокса Y-Карты обновляем кнопку только если активный продукт — карта
-                if (selectedProduct && selectedProduct.type === 'card') updateMainButton();
-                else updateMainButton(); // всё равно проверим, вдруг выбора нет, кнопка скроется
-            });
-        }
-        if (mbaCheckbox) {
-            mbaCheckbox.addEventListener('change', () => {
-                if (selectedProduct && selectedProduct.type === 'mba') updateMainButton();
-                else updateMainButton();
-            });
-        }
+        if (cardCheckbox) cardCheckbox.addEventListener('change', () => updateMainButton());
+        if (mbaCheckbox) mbaCheckbox.addEventListener('change', () => updateMainButton());
     }
 
-    // При смене вкладки также вызываем обновление кнопки
     function bindTabChange() {
-        const tabs = document.querySelectorAll('input[name="tabs"]');
-        tabs.forEach(tab => {
-            tab.addEventListener('change', function() {
-                updateMainButton();
-            });
+        document.querySelectorAll('input[name="tabs"]').forEach(tab => {
+            tab.addEventListener('change', () => updateMainButton());
         });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
         bindTabChange();
-        bindAgreementCheckboxes();       // подписываем чекбоксы
+        bindAgreementCheckboxes();
         document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
         updateSelectedProgram();
         updateSelectedCource();
-        
         if (tg) {
             tg.MainButton.setText("Купить");
             tg.MainButton.hide();
-            setTimeout(() => {
-                updateMainButton();
-            }, 200);
+            setTimeout(() => updateMainButton(), 200);
         }
-        
-        // Дополнительно: если пользователь случайно выбрал продукт и согласие уже было — кнопка появится
     });
 
-    // Настройка главной кнопки Telegram (покупка)
     if (tg) {
-        tg.MainButton.setText("Купить");
         tg.MainButton.onClick(() => {
             if (!selectedProduct) {
-                tg.showAlert("Пожалуйста, выберите продукт (Y-Карта или Y-MBA)");
+                tg.showAlert("Выберите продукт");
                 return;
             }
-            // Повторная проверка согласия перед отправкой (защита)
             let isAccepted = false;
-            if (selectedProduct.type === 'card') {
-                const chk = document.getElementById('agree-offer-card');
-                isAccepted = chk ? chk.checked : false;
-            } else if (selectedProduct.type === 'mba') {
-                const chk = document.getElementById('agree-offer-mba');
-                isAccepted = chk ? chk.checked : false;
-            }
+            if (selectedProduct.type === 'card') isAccepted = document.getElementById('agree-offer-card')?.checked;
+            else isAccepted = document.getElementById('agree-offer-mba')?.checked;
             if (!isAccepted) {
-                tg.showAlert("Для покупки необходимо ознакомиться с публичной офертой и подтвердить согласие (поставьте галочку)");
+                tg.showAlert("Подтвердите согласие с офертой");
                 return;
             }
-            
-            const paymentMethod = getSelectedPaymentMethod();
             const payload = {
                 type: selectedProduct.type,
                 level: selectedProduct.level,
                 price: selectedProduct.price,
-                payment_method: paymentMethod
+                payment_method: getSelectedPaymentMethod()
             };
             tg.sendData(JSON.stringify(payload));
-            // После отправки данных не сбрасываем галочку, но сбрасываем выбранный продукт
             clearSelectedProduct();
-            // Дополнительно можно показать уведомление об успешном запросе
-            tg.showAlert("Запрос на покупку отправлен. Ожидайте подтверждение.");
+            tg.showAlert("Запрос отправлен");
         });
     } else {
-        // fallback для отладки вне Telegram
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.tg-main-button') || (selectedProduct && confirm("Купить? (Telegram WebApp не активен)"))) {
-                let isAccepted = false;
-                if (selectedProduct && selectedProduct.type === 'card') {
-                    const chk = document.getElementById('agree-offer-card');
-                    isAccepted = chk ? chk.checked : false;
-                } else if (selectedProduct && selectedProduct.type === 'mba') {
-                    const chk = document.getElementById('agree-offer-mba');
-                    isAccepted = chk ? chk.checked : false;
-                }
-                if (!isAccepted) {
-                    alert("Пожалуйста, подтвердите согласие с офертой (поставьте галочку)");
-                    return;
-                }
-                alert("Мини-приложение запущено вне Telegram. Покупка недоступна.");
-            }
-        });
+        window.setNetwork = function(isTestnet) { console.log("Network", isTestnet); alert("Демо"); };
+        window.disconnectWallet = function() { alert("Демо"); };
     }
-
-    // Интеграция с TON Connect (заглушки, чтобы избежать ошибок)
-    window.setNetwork = function(isTestnet) {
-        console.log("Set network testnet =", isTestnet);
-        if (tg) tg.showAlert("Функция смены сети в разработке");
-    };
-    window.disconnectWallet = function() {
-        console.log("Disconnect wallet");
-        if (tg) tg.showAlert("Отключение кошелька временно недоступно");
-    };
 </script>
 
 </body>
