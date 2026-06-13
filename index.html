@@ -158,6 +158,56 @@
         } catch(e) { console.error("Ошибка canvas:", e); }
     }
 
+    // ----- УСИЛЕННАЯ ОТРИСОВКА QR -----
+    function renderUserQR() {
+        const qrContainer = document.getElementById('qr-place');
+        if (!qrContainer) return;
+        // Если уже есть canvas и он содержит корректный QR — не перерисовываем (опционально)
+        if (qrContainer.querySelector('canvas') && qrContainer.innerText !== '') return;
+    
+        const qrText = tgUser ? tgUser.id.toString() : 'USER_NOT_DEFINED';
+        const color = tgButtonColor || '#30a2ff';
+    
+        qrContainer.innerHTML = ''; // очищаем от возможных ошибок
+        const canvas = document.createElement('canvas');
+        canvas.style.width = '180px';
+        canvas.style.height = '180px';
+        qrContainer.appendChild(canvas);
+    
+        if (typeof QRCode === 'undefined') {
+            console.error('QRCode lib not loaded, retry in 500ms');
+            setTimeout(renderUserQR, 500);
+            return;
+        }
+    
+        QRCode.toCanvas(canvas, qrText, {
+            width: 180,
+            margin: 2,
+            color: { dark: color, light: '#ffffff' },
+            errorCorrectionLevel: 'M'
+        }, (error) => {
+            if (error) {
+                console.error('QR error:', error);
+                qrContainer.innerHTML = '<p style="color:red;">❌ QR-код ошибка</p>';
+            } else {
+                console.log('QR успешно создан для', qrText);
+            }
+        });
+}
+
+// Вызываем после полной загрузки DOM и ещё раз через 300 мс (на случай, если TON Connect что-то сбросил)
+document.addEventListener('DOMContentLoaded', () => {
+    renderUserQR();
+    setTimeout(renderUserQR, 300);
+});
+// Также дополнительно при переключении вкладки на "Ваши данные"
+const tab1 = document.getElementById('tab1');
+if (tab1) {
+    tab1.addEventListener('change', function() {
+        if (this.checked) setTimeout(renderUserQR, 100);
+    });
+}
+
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
