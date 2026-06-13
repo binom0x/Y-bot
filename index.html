@@ -4,6 +4,7 @@
 <head>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+	<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Y - Ваш ключ от будущего!</title>
@@ -70,8 +71,18 @@
     </section>
 
     <section id="content4">
-        <h2>Оферта</h2>
-        <p id="offer_text"></p>
+        <h2>Баланс</h2>
+		<!-- Кнопка подключения кошелька (библиотека поместит сюда свою кнопку) -->
+		<div id="ton-connect-button"></div>
+
+		<!-- Вывод балансов -->
+		<div id="ton-balance">—</div>
+		<div id="yd-balance">—</div>
+
+		<!-- Кнопки переключения сети (по желанию) -->
+		<button onclick="setNetwork(false)">Mainnet</button>
+		<button onclick="setNetwork(true)">Testnet</button>
+		<button onclick="disconnectWallet()">Отключить</button>
     </section>
 </main>
 
