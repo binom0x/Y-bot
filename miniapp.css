@@ -13,19 +13,19 @@ html, body {
 
 body {
   font: 14px/1 'Open Sans', sans-serif;
-  color: var(--tg-theme-text-color, #000000);
-  background: var(--tg-theme-bg-color, #225577);
+  color: #000000;
+  background: #225577;
 }
 
 h1 {
   padding: 10px;
   font-weight: 400;
   text-align: center;
-  color: var(--tg-theme-text-color, #000000);
+  color: #000000;
 }
 
 h2 {
-  color: var(--tg-theme-text-color, #000000);
+  color: #000000;
 }
 
 p { 
@@ -51,15 +51,15 @@ main {
   padding: 1em;
   margin: 0 auto;
   background-image: url("Y.png");
-  background-color: var(--tg-theme-secondary-bg-color, #eef2f5);
-  color: var(--tg-theme-text-color, #000000);
+  background-color: #eef2f5;
+  color: #000000;
 }
 
 section {
   display: none;
   padding: 20px 0 0;
-  border-top: 1px solid var(--tg-theme-hint-color, #ddd);
-  color: var(--tg-theme-text-color, #000000);
+  border-top: 1px solid #ddd;
+  color: #000000;
 }
 
 input[id^="tab"] {
@@ -67,13 +67,13 @@ input[id^="tab"] {
 }
 
 textarea {
-  color: var(--tg-theme-text-color);
-  background: var(--tg-theme-secondary-bg-color);
+  color: #000000;
+  background: #f4f6f9;
 }
 
 select {
-  color: var(--tg-theme-text-color);
-  background: var(--tg-theme-secondary-bg-color);
+  color: #000000;
+  background: #f4f6f9;
 }
 
 label {
@@ -82,7 +82,7 @@ label {
   padding: 15px 25px;
   font-weight: 600;
   text-align: center;
-  color: var(--tg-theme-text-color, #000000);
+  color: #000000;
   border: 1px solid transparent;
 }
 
@@ -98,15 +98,15 @@ label[for*='3']:before { content: '\f02d'; }
 label[for*='4']:before { content: '\f05a'; }
 
 label:hover {
-  color: var(--tg-theme-hint-color, #888);
+  color: #888;
   cursor: pointer;
 }
 
 input:checked + label {
-  color: var(--tg-theme-link-color, #d4d4d4);
-  border: 1px solid var(--tg-theme-hint-color, #ddd);
+  color: #d4d4d4;
+  border: 1px solid #ddd;
   border-top: 2px solid orange;
-  border-bottom: 1px solid var(--tg-theme-bg-color, #fff);
+  border-bottom: 1px solid #fff;
 }
 
 #tab1:checked ~ #content1,
@@ -141,23 +141,23 @@ input:checked + label {
 }
 
 .user-info {
-    background: var(--tg-theme-secondary-bg-color, #ffffff);
+    background: #ffffff;
     padding: 16px;
     border-radius: 16px;
     margin-bottom: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    color: var(--tg-theme-text-color, #000);
+    color: #000;
 }
 .user-info p {
     margin: 8px 0;
     font-size: 15px;
 }
 .user-info strong {
-    color: var(--tg-theme-link-color, #1e6fdf);
+    color: #1e6fdf;
 }
 
 #qr-place {
-    background: var(--tg-theme-secondary-bg-color, #ffffff);
+    background: #ffffff;
     padding: 16px;
     border-radius: 16px;
     display: flex;
@@ -176,12 +176,12 @@ input:checked + label {
 
 /* ========== БЛОК ВЫБОРА СПОСОБА ОПЛАТЫ ========== */
 .payment-method-block {
-    background: var(--tg-theme-secondary-bg-color, #ffffff);
+    background: #ffffff;
     border-radius: 12px;
     padding: 15px;
     margin-top: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    color: var(--tg-theme-text-color, #000);
+    color: #000;
 }
 .payment-method-block h3 {
     margin: 0 0 12px 0;
@@ -195,11 +195,11 @@ input:checked + label {
     font-weight: normal;
     border: none;
     font-size: 14px;
-    color: var(--tg-theme-text-color, #000);
+    color: #000;
     background: transparent;
 }
 .payment-method-block label:hover {
-    color: var(--tg-theme-link-color, #1e6fdf);
+    color: #1e6fdf;
     cursor: pointer;
 }
 .payment-method-block input[type="radio"] {
@@ -207,30 +207,30 @@ input:checked + label {
     vertical-align: middle;
 }
 
-/* ========== БЛОК СОГЛАСИЯ С ОФЕРТОЙ (улучшенная видимость) ========== */
+/* ========== БЛОК СОГЛАСИЯ С ОФЕРТОЙ ========== */
 .offer-agreement {
     margin-top: 24px;
     padding: 16px 12px;
-    background: var(--tg-theme-secondary-bg-color, #f4f6f9);
+    background: #f4f6f9;
     border-radius: 16px;
     font-size: 14px;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
-    color: var(--tg-theme-text-color, #1a2a3a);
+    color: #1a2a3a;
 }
 .offer-agreement input[type="checkbox"] {
     width: 20px;
     height: 20px;
     margin: 0;
     cursor: pointer;
-    accent-color: var(--tg-theme-button-color, #30a2ff);
+    accent-color: #30a2ff;
 }
 .offer-agreement label {
     flex: 1;
     cursor: pointer;
-    color: var(--tg-theme-text-color, #1a2a3a);
+    color: #1a2a3a;
     line-height: 1.4;
     background: transparent;
     border: none;
@@ -238,7 +238,7 @@ input:checked + label {
     margin: 0;
 }
 .offer-agreement a {
-    color: var(--tg-theme-link-color, #2675b9);
+    color: #2675b9;
     text-decoration: underline;
     font-weight: 600;
     cursor: pointer;
@@ -262,7 +262,7 @@ input:checked + label {
     backdrop-filter: blur(5px);
 }
 .modal-content {
-    background: var(--tg-theme-bg-color, #ffffff);
+    background: #ffffff;
     width: 92%;
     max-width: 880px;
     max-height: 85vh;
@@ -278,32 +278,32 @@ input:checked + label {
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid var(--tg-theme-hint-color, #cdd9ed);
-    background: var(--tg-theme-secondary-bg-color, #f0f2f5);
+    border-bottom: 1px solid #cdd9ed;
+    background: #f0f2f5;
 }
 .modal-header h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-    color: var(--tg-theme-text-color, #000);
+    color: #000;
 }
 .close-modal {
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
     line-height: 1;
-    color: var(--tg-theme-hint-color, #8e9eae);
+    color: #8e9eae;
     transition: 0.2s;
 }
 .close-modal:hover {
-    color: var(--tg-theme-text-color, #000);
+    color: #000;
 }
 .modal-body {
     padding: 20px;
     overflow-y: auto;
     flex: 1;
-    background: var(--tg-theme-bg-color, #fff);
-    color: var(--tg-theme-text-color, #000);
+    background: #fff;
+    color: #000;
 }
 @keyframes fadeInUp {
     from {
@@ -323,7 +323,7 @@ input:checked + label {
     margin-bottom: 20px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     transition: all 0.2s ease;
-    background: var(--tg-theme-secondary-bg-color, #f9fafc);
+    background: #f9fafc;
 }
 .wallet-header {
     display: flex;
@@ -332,13 +332,13 @@ input:checked + label {
     flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 18px;
-    border-bottom: 1px solid var(--tg-theme-hint-color, #eef2f6);
+    border-bottom: 1px solid #eef2f6;
     padding-bottom: 12px;
 }
 .wallet-title {
     font-size: 18px;
     font-weight: 700;
-    color: var(--tg-theme-text-color, #000);
+    color: #000;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -364,12 +364,12 @@ input:checked + label {
     transform: scale(0.98);
 }
 .ton-disconnect {
-    background: var(--tg-theme-secondary-bg-color, #f0f2f5);
-    color: var(--tg-theme-text-color, #1f2a3a);
-    border: 1px solid var(--tg-theme-hint-color, #dce1e8);
+    background: #f0f2f5;
+    color: #1f2a3a;
+    border: 1px solid #dce1e8;
 }
 .wallet-info {
-    background: var(--tg-theme-bg-color, #f8fafd);
+    background: #f8fafd;
     border-radius: 16px;
     padding: 16px;
     margin: 16px 0;
@@ -379,28 +379,28 @@ input:checked + label {
     justify-content: space-between;
     align-items: baseline;
     padding: 12px 0;
-    border-bottom: 1px solid var(--tg-theme-hint-color, #e2e8f0);
+    border-bottom: 1px solid #e2e8f0;
 }
 .balance-row:last-child {
     border-bottom: none;
 }
 .balance-label {
     font-weight: 600;
-    color: var(--tg-theme-text-color, #2c3e4e);
+    color: #2c3e4e;
     font-size: 15px;
 }
 .balance-value {
     font-family: monospace;
     font-size: 16px;
     font-weight: 700;
-    color: var(--tg-theme-text-color, #0f2b3d);
+    color: #0f2b3d;
     word-break: break-all;
     text-align: right;
 }
 .jetton-address {
     font-size: 12px;
-    color: var(--tg-theme-hint-color, #5c6f87);
-    background: var(--tg-theme-secondary-bg-color, #edf2f7);
+    color: #5c6f87;
+    background: #edf2f7;
     padding: 6px 10px;
     border-radius: 20px;
     display: inline-block;
@@ -409,7 +409,7 @@ input:checked + label {
 }
 .refresh-balance {
     background: none;
-    border: 1px solid var(--tg-theme-hint-color, #cbd5e1);
+    border: 1px solid #cbd5e1;
     border-radius: 30px;
     padding: 6px 14px;
     font-size: 13px;
@@ -419,8 +419,8 @@ input:checked + label {
 }
 .status-message {
     font-size: 13px;
-    color: var(--tg-theme-hint-color, #4b5563);
-    background: var(--tg-theme-secondary-bg-color, #f1f5f9);
+    color: #4b5563;
+    background: #f1f5f9;
     padding: 12px;
     border-radius: 14px;
     margin-top: 12px;
@@ -434,8 +434,8 @@ input:checked + label {
 }
 .custom-jetton {
     margin-top: 16px;
-    background: var(--tg-theme-bg-color, #ffffff);
-    border: 1px solid var(--tg-theme-hint-color, #e2edf2);
+    background: #ffffff;
+    border: 1px solid #e2edf2;
     border-radius: 20px;
     padding: 16px;
 }
@@ -449,13 +449,13 @@ input:checked + label {
     flex: 1;
     padding: 10px 12px;
     border-radius: 40px;
-    border: 1px solid var(--tg-theme-hint-color, #cbd5e1);
+    border: 1px solid #cbd5e1;
     font-size: 13px;
     font-family: monospace;
-    background: var(--tg-theme-bg-color, #fff);
+    background: #fff;
 }
 .small-btn {
-    background: var(--tg-theme-secondary-bg-color, #eef2ff);
+    background: #eef2ff;
     border: none;
     border-radius: 40px;
     padding: 0 16px;
@@ -471,7 +471,7 @@ input:checked + label {
 }
 hr {
     margin: 16px 0;
-    border-color: var(--tg-theme-hint-color, #eef2f6);
+    border-color: #eef2f6;
 }
 
 /* ========== ВСПОМОГАТЕЛЬНЫЕ СТИЛИ ========== */
@@ -479,7 +479,7 @@ select, button {
     border-radius: 14px;
 }
 
-/* Печать: скрываем модальное окно и улучшаем разрыв страниц */
+/* Печать: скрываем модальное окно */
 @media print {
     .modal {
         display: none !important;

@@ -56,7 +56,7 @@
             <input type="checkbox" id="agree-offer-card">
             <label for="agree-offer-card">
                 Я ознакомлен(а) и согласен(сна) с условиями 
-                <a href="javascript:void(0)" id="show-offer-card-link" class="offer-link">Публичной оферты</a>
+                <a href="javascript:void(0)" data-offer-type="card" class="offer-link">Публичной оферты (Y‑Карта)</a>
             </label>
         </div>
     </section>
@@ -79,7 +79,7 @@
             <input type="checkbox" id="agree-offer-mba">
             <label for="agree-offer-mba">
                 Я ознакомлен(а) и согласен(сна) с условиями 
-                <a href="javascript:void(0)" id="show-offer-mba-link" class="offer-link">Публичной оферты</a>
+                <a href="javascript:void(0)" data-offer-type="mba" class="offer-link">Публичной оферты (Y‑MBA)</a>
             </label>
         </div>
     </section>
@@ -95,7 +95,6 @@
     </section>
 </main>
 
-<!-- Модальное окно для оферты -->
 <div id="offerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -114,72 +113,42 @@
     let selectedProduct = null;
     let tgUser = null;
     let tg = null;
-    let cachedOfferHTML = null;
+    // Кэш для разных оферт
+    let cachedOffers = {
+        card: null,
+        mba: null
+    };
 
     function displayQRCode(container, text, size, color, margin = 2) {
-        const target = typeof container === 'string' 
-            ? document.querySelector(container) 
-            : container;
-        if (!target) {
-            console.error('Контейнер для QR‑кода не найден');
-            return;
-        }
-        let darkColor = '#000000';
-        let lightColor = '#ffffff';
-        if (typeof color === 'string') {
-            darkColor = color;
-        } else if (typeof color === 'object' && color !== null) {
-            darkColor = color.dark || '#000000';
-            lightColor = color.light || '#ffffff';
-        }
+        const target = typeof container === 'string' ? document.querySelector(container) : container;
+        if (!target) { console.error('Контейнер для QR‑кода не найден'); return; }
+        let darkColor = '#000000', lightColor = '#ffffff';
+        if (typeof color === 'string') darkColor = color;
+        else if (typeof color === 'object' && color !== null) { darkColor = color.dark || '#000000'; lightColor = color.light || '#ffffff'; }
         target.innerHTML = '';
         const canvas = document.createElement('canvas');
         target.appendChild(canvas);
         try {
-            QRCode.toCanvas(canvas, text, {
-                width: size,
-                margin: margin,
-                color: { dark: darkColor, light: lightColor },
-                errorCorrectionLevel: 'M'
-            }, (error) => {
-                if (error) {
-                    console.error('Ошибка генерации QR:', error);
-                    target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>';
-                }
+            QRCode.toCanvas(canvas, text, { width: size, margin, color: { dark: darkColor, light: lightColor }, errorCorrectionLevel: 'M' }, (error) => {
+                if (error) { console.error('Ошибка генерации QR:', error); target.innerHTML = '<p style="color:red;">Не удалось создать QR‑код</p>'; }
             });
-        } catch(e) {
-            console.error("Ошибка canvas:", e);
-        }
+        } catch(e) { console.error("Ошибка canvas:", e); }
     }
 
-    if (window.Telegram && window.Telegram.WebApp) {
-        tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-    } else {
-        console.error("Telegram WebApp не найден.");
-    }
+    if (window.Telegram && window.Telegram.WebApp) { tg = window.Telegram.WebApp; tg.ready(); tg.expand(); }
+    else console.error("Telegram WebApp не найден.");
 
     function getTelegramUser() {
         if (!tg) return null;
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            return tg.initDataUnsafe.user;
-        }
+        if (tg.initDataUnsafe?.user) return tg.initDataUnsafe.user;
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('user_id');
-        if (userId) {
-            return {
-                id: parseInt(userId, 10),
-                first_name: decodeURIComponent(urlParams.get('first_name') || ''),
-                username: decodeURIComponent(urlParams.get('username') || '')
-            };
-        }
+        if (userId) return { id: parseInt(userId, 10), first_name: decodeURIComponent(urlParams.get('first_name') || ''), username: decodeURIComponent(urlParams.get('username') || '') };
         return null;
     }
 
     const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
     tgUser = getTelegramUser();
-
     if (tgUser) {
         document.getElementById('user-id').innerHTML = tgUser.id.toString();
         document.getElementById('user-name').innerHTML = tgUser.first_name || 'Пользователь';
@@ -192,48 +161,28 @@
 
     function getSelectedPaymentMethod() {
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
-        if (activeTabId === 'tab2') {
-            const radio = document.querySelector('#content2 input[name="payment_method_card"]:checked');
-            return radio ? radio.value : 'stars';
-        } else if (activeTabId === 'tab3') {
-            const radio = document.querySelector('#content3 input[name="payment_method_mba"]:checked');
-            return radio ? radio.value : 'stars';
-        }
+        if (activeTabId === 'tab2') return document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value || 'stars';
+        if (activeTabId === 'tab3') return document.querySelector('#content3 input[name="payment_method_mba"]:checked')?.value || 'stars';
         return 'stars';
     }
 
     function updateMainButton() {
         if (!tg) return;
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
-        if (!selectedProduct) {
-            tg.MainButton.hide();
-            return;
-        }
+        if (!selectedProduct) { tg.MainButton.hide(); return; }
         const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
         if (activeTabId === productTab) {
             let isOfferAccepted = false;
-            if (selectedProduct.type === 'card') {
-                const chk = document.getElementById('agree-offer-card');
-                isOfferAccepted = chk ? chk.checked : false;
-            } else if (selectedProduct.type === 'mba') {
-                const chk = document.getElementById('agree-offer-mba');
-                isOfferAccepted = chk ? chk.checked : false;
-            }
-            if (isOfferAccepted) {
-                tg.MainButton.setParams({ is_visible: true, is_active: true, text: "Купить" });
-                tg.MainButton.show();
-            } else {
-                tg.MainButton.hide();
-            }
-        } else {
-            tg.MainButton.hide();
-        }
+            if (selectedProduct.type === 'card') isOfferAccepted = document.getElementById('agree-offer-card')?.checked || false;
+            else if (selectedProduct.type === 'mba') isOfferAccepted = document.getElementById('agree-offer-mba')?.checked || false;
+            if (isOfferAccepted) { tg.MainButton.setParams({ is_visible: true, is_active: true, text: "Купить" }); tg.MainButton.show(); }
+            else tg.MainButton.hide();
+        } else tg.MainButton.hide();
     }
 
     function clearSelectedProduct() {
         selectedProduct = null;
-        const cardSelect = document.getElementById('card_programs');
-        const courseSelect = document.getElementById('Y_cources');
+        const cardSelect = document.getElementById('card_programs'), courseSelect = document.getElementById('Y_cources');
         if (cardSelect) cardSelect.selectedIndex = 0;
         if (courseSelect) courseSelect.selectedIndex = 0;
         document.getElementById('selected_program').innerHTML = 'Ничего не выбрано';
@@ -243,153 +192,107 @@
 
     function updateSelectedProgram() {
         const select = document.getElementById('card_programs');
-        const selectedIndex = select.selectedIndex;
-        const displayElement = document.getElementById('selected_program');
-        if (selectedIndex > 0) {
-            const item = c_programs[selectedIndex - 1];
-            displayElement.innerHTML = item.description;
+        const idx = select.selectedIndex;
+        const display = document.getElementById('selected_program');
+        if (idx > 0) {
+            const item = c_programs[idx - 1];
+            display.innerHTML = item.description;
             selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price, 10) };
-        } else {
-            displayElement.textContent = 'Ничего не выбрано';
-            if (selectedProduct && selectedProduct.type === 'card') selectedProduct = null;
-        }
+        } else { display.textContent = 'Ничего не выбрано'; if (selectedProduct?.type === 'card') selectedProduct = null; }
         updateMainButton();
     }
 
     function updateSelectedCource() {
         const select = document.getElementById('Y_cources');
-        const selectedIndex = select.selectedIndex;
-        const displayElement = document.getElementById('selected_cource');
-        if (selectedIndex > 0) {
-            const item = y_cources[selectedIndex - 1];
-            displayElement.innerHTML = item.description;
+        const idx = select.selectedIndex;
+        const display = document.getElementById('selected_cource');
+        if (idx > 0) {
+            const item = y_cources[idx - 1];
+            display.innerHTML = item.description;
             selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price, 10) };
-        } else {
-            displayElement.textContent = 'Ничего не выбрано';
-            if (selectedProduct && selectedProduct.type === 'mba') selectedProduct = null;
-        }
+        } else { display.textContent = 'Ничего не выбрано'; if (selectedProduct?.type === 'mba') selectedProduct = null; }
         updateMainButton();
     }
 
-    fetch('content.json')
-        .then(response => response.json())
-        .then(jsonData => {
-            c_programs = jsonData[5].product;
-            const select1 = document.getElementById('card_programs');
-            for (const item of c_programs) {
-                const option = document.createElement('option');
-                option.value = item.level;
-                option.textContent = `${item.level} (${item.price} руб.)`;
-                select1.appendChild(option);
-            }
-            y_cources = jsonData[6];
-            const select2 = document.getElementById('Y_cources');
-            for (const item of y_cources) {
-                const option = document.createElement('option');
-                option.value = item.level;
-                option.textContent = `${item.level} (${item.price} руб.)`;
-                select2.appendChild(option);
-            }
-        })
-        .catch(err => console.error("Ошибка загрузки content.json:", err));
+    fetch('content.json').then(r => r.json()).then(data => {
+        c_programs = data[5].product;
+        const s1 = document.getElementById('card_programs');
+        c_programs.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s1.appendChild(opt); });
+        y_cources = data[6];
+        const s2 = document.getElementById('Y_cources');
+        y_cources.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
+    }).catch(err => console.error("Ошибка загрузки content.json:", err));
 
-    function loadAndCacheOffer() {
-        if (cachedOfferHTML) return Promise.resolve(cachedOfferHTML);
-        return fetch('offer.html')
-            .then(response => { if (!response.ok) throw new Error(); return response.text(); })
-            .then(html => { cachedOfferHTML = html; return cachedOfferHTML; })
-            .catch(() => { cachedOfferHTML = '<div style="color:red; padding:20px;">⚠️ Не удалось загрузить текст оферты.</div>'; return cachedOfferHTML; });
+    // Загрузка оферты по типу (card / mba)
+    function loadOfferByType(type) {
+        if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
+        const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
+        return fetch(fileName)
+            .then(response => {
+                if (!response.ok) throw new Error(`Оферта ${fileName} не найдена`);
+                return response.text();
+            })
+            .then(html => {
+                cachedOffers[type] = html;
+                return html;
+            })
+            .catch(err => {
+                console.error(`Ошибка загрузки ${fileName}:`, err);
+                const fallback = `<div style="color:red; padding:20px;">⚠️ Не удалось загрузить текст оферты для ${type === 'card' ? 'Y‑Карты' : 'Y‑MBA'}. Пожалуйста, попробуйте позже.</div>`;
+                cachedOffers[type] = fallback;
+                return fallback;
+            });
     }
 
-    function showOfferModal() {
-        const modal = document.getElementById('offerModal');
-        const modalBody = document.getElementById('modalOfferBody');
+    function showOfferModal(offerType) {
+        const modal = document.getElementById('offerModal'), body = document.getElementById('modalOfferBody');
         if (!modal) return;
-        if (cachedOfferHTML) {
-            modalBody.innerHTML = cachedOfferHTML;
-        } else {
-            modalBody.innerHTML = '<div style="text-align:center; padding: 30px;">⏳ Загрузка...</div>';
-            loadAndCacheOffer().then(html => { modalBody.innerHTML = html; });
-        }
-        modal.classList.add('show-modal');  // гарантия отображения
+        body.innerHTML = '<div style="text-align:center; padding: 30px;">⏳ Загрузка...</div>';
         modal.style.display = 'flex';
-    }
-
-    function closeOfferModal() {
-        const modal = document.getElementById('offerModal');
-        if (modal) {
-            modal.classList.remove('show-modal');
-            modal.style.display = 'none';
-        }
-    }
-
-    loadAndCacheOffer();
-
-    // Прямая привязка к ссылкам
-    document.getElementById('show-offer-card-link')?.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(); });
-    document.getElementById('show-offer-mba-link')?.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(); });
-    const closeBtn = document.getElementById('closeModalBtn');
-    if (closeBtn) closeBtn.onclick = closeOfferModal;
-    window.onclick = function(event) {
-        const modal = document.getElementById('offerModal');
-        if (event.target === modal) closeOfferModal();
-    };
-
-    function bindAgreementCheckboxes() {
-        const cardCheckbox = document.getElementById('agree-offer-card');
-        const mbaCheckbox = document.getElementById('agree-offer-mba');
-        if (cardCheckbox) cardCheckbox.addEventListener('change', () => updateMainButton());
-        if (mbaCheckbox) mbaCheckbox.addEventListener('change', () => updateMainButton());
-    }
-
-    function bindTabChange() {
-        document.querySelectorAll('input[name="tabs"]').forEach(tab => {
-            tab.addEventListener('change', () => updateMainButton());
+        loadOfferByType(offerType).then(html => {
+            body.innerHTML = html;
         });
     }
+    function closeOfferModal() { const modal = document.getElementById('offerModal'); if (modal) modal.style.display = 'none'; }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        bindTabChange();
-        bindAgreementCheckboxes();
+    // Обработчики кликов по ссылкам оферт
+    document.querySelectorAll('.offer-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const offerType = link.getAttribute('data-offer-type');
+            if (offerType) showOfferModal(offerType);
+        });
+    });
+    document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
+    window.onclick = (event) => { if (event.target === document.getElementById('offerModal')) closeOfferModal(); };
+
+    function bindAgreementCheckboxes() {
+        document.getElementById('agree-offer-card')?.addEventListener('change', () => updateMainButton());
+        document.getElementById('agree-offer-mba')?.addEventListener('change', () => updateMainButton());
+    }
+    function bindTabChange() { document.querySelectorAll('input[name="tabs"]').forEach(tab => tab.addEventListener('change', () => updateMainButton())); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        bindTabChange(); bindAgreementCheckboxes();
         document.getElementById('card_programs').addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources').addEventListener('change', updateSelectedCource);
-        updateSelectedProgram();
-        updateSelectedCource();
-        if (tg) {
-            tg.MainButton.setText("Купить");
-            tg.MainButton.hide();
-            setTimeout(() => updateMainButton(), 200);
-        }
+        updateSelectedProgram(); updateSelectedCource();
+        if (tg) { tg.MainButton.setText("Купить"); tg.MainButton.hide(); setTimeout(() => updateMainButton(), 200); }
     });
 
     if (tg) {
         tg.MainButton.onClick(() => {
-            if (!selectedProduct) {
-                tg.showAlert("Выберите продукт");
-                return;
-            }
-            let isAccepted = false;
-            if (selectedProduct.type === 'card') isAccepted = document.getElementById('agree-offer-card')?.checked;
-            else isAccepted = document.getElementById('agree-offer-mba')?.checked;
-            if (!isAccepted) {
-                tg.showAlert("Подтвердите согласие с офертой");
-                return;
-            }
-            const payload = {
-                type: selectedProduct.type,
-                level: selectedProduct.level,
-                price: selectedProduct.price,
-                payment_method: getSelectedPaymentMethod()
-            };
-            tg.sendData(JSON.stringify(payload));
+            if (!selectedProduct) { tg.showAlert("Выберите продукт"); return; }
+            let isAccepted = (selectedProduct.type === 'card') ? document.getElementById('agree-offer-card')?.checked : document.getElementById('agree-offer-mba')?.checked;
+            if (!isAccepted) { tg.showAlert("Подтвердите согласие с офертой"); return; }
+            tg.sendData(JSON.stringify({ type: selectedProduct.type, level: selectedProduct.level, price: selectedProduct.price, payment_method: getSelectedPaymentMethod() }));
             clearSelectedProduct();
             tg.showAlert("Запрос отправлен");
         });
     } else {
-        window.setNetwork = function(isTestnet) { console.log("Network", isTestnet); alert("Демо"); };
-        window.disconnectWallet = function() { alert("Демо"); };
+        window.setNetwork = (isTestnet) => { console.log("Network", isTestnet); alert("Демо"); };
+        window.disconnectWallet = () => alert("Демо");
     }
 </script>
-
 </body>
 </html>
