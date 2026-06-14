@@ -9,37 +9,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- QRCode -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <style>
-        /* Дополнительные стили для иконок токенов */
-        .balance-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-            height: 44px;
-            background: #f8f9fc;
-            border-radius: 28px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        }
-        .balance-icon img {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-            display: block;
-        }
-        /* адаптация для темной темы Telegram */
-        @media (prefers-color-scheme: dark) {
-            .balance-icon {
-                background: #2c2c2e;
-            }
-        }
-        .wallet-card {
-            background: var(--tg-theme-bg-color, #ffffff);
-            border-radius: 24px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            margin-bottom: 16px;
-        }
-    </style>
 </head>
 <body>
 
@@ -191,9 +160,18 @@
     }
     
     // Вспомогательная функция для проверки валидности TON адреса (простая)
-    function isValidTonAddress(address) {
-        return address && (address.startsWith('EQ') || address.startsWith('UQ')) && address.length === 48;
-    }
+	function isValidTonAddress(address) {
+		if (!address || typeof address !== 'string') return false;
+		// Основной формат: начинается с EQ или UQ, длина от 40 до 64 символов (но чаще 48)
+		if ((address.startsWith('EQ') || address.startsWith('UQ')) && address.length >= 40) {
+			return true;
+		}
+		// Дополнительно: raw формат (число) – например, '0:...' или просто шестнадцатеричная строка
+		if (/^[0-9a-fA-F]{64}$/.test(address) || /^0:[0-9a-fA-F]{64}$/.test(address)) {
+			return true;
+		}
+		return false;
+	}
     
     // ---------------------- TELEGRAM -------------------------
     if (window.Telegram && window.Telegram.WebApp) { 
