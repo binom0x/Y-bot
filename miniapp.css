@@ -207,18 +207,19 @@ input:checked + label {
     vertical-align: middle;
 }
 
-/* ========== БЛОК СОГЛАСИЯ С ОФЕРТОЙ ========== */
+/* ========== БЛОК СОГЛАСИЯ С ОФЕРТОЙ (ГАРАНТИРОВАННО ВИДИМ) ========== */
 .offer-agreement {
     margin-top: 24px;
     padding: 16px 12px;
-    background: #f4f6f9;
+    background: #f0f4f8;   /* светлый фон, отличающийся от белого */
     border-radius: 16px;
     font-size: 14px;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
-    color: #1a2a3a;
+    color: #111;           /* тёмный текст */
+    border: 1px solid #cdd9ed; /* граница для надёжности */
 }
 .offer-agreement input[type="checkbox"] {
     width: 20px;
@@ -230,12 +231,13 @@ input:checked + label {
 .offer-agreement label {
     flex: 1;
     cursor: pointer;
-    color: #1a2a3a;
+    color: #111;           /* явный тёмный цвет */
     line-height: 1.4;
     background: transparent;
     border: none;
     padding: 0;
     margin: 0;
+    font-weight: normal;
 }
 .offer-agreement a {
     color: #2675b9;
@@ -244,7 +246,7 @@ input:checked + label {
     cursor: pointer;
 }
 .offer-agreement a:hover {
-    opacity: 0.8;
+    color: #1e5a8a;
 }
 
 /* ========== МОДАЛЬНОЕ ОКНО ДЛЯ ОФЕРТЫ ========== */
