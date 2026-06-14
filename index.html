@@ -13,13 +13,10 @@
 <main>
     <input id="tab1" type="radio" name="tabs" checked>
     <label for="tab1">Ваши данные</label>
-
     <input id="tab2" type="radio" name="tabs">
     <label for="tab2">Y-Карта</label>
-
     <input id="tab3" type="radio" name="tabs">
     <label for="tab3">Y-MBA</label>
-
     <input id="tab4" type="radio" name="tabs">
     <label for="tab4">Баланс</label>
 
@@ -109,7 +106,7 @@
                     <button id="mainnetBtn" class="network-btn active">🌍 Mainnet</button>
                     <button id="testnetBtn" class="network-btn">🧪 Testnet</button>
                 </div>
-                <!-- Кнопка "Отключить кошелёк" удалена по просьбе пользователя -->
+                <!-- Кнопка "Отключить кошелёк" удалена -->
             </div>
             <div id="walletStatusMsg" class="status-message">
                 💡 Загрузка TON Connect...
@@ -137,33 +134,41 @@
     let tg = null;
     let cachedOffers = { card: null, mba: null };
     
+    // Wallet state
     let tonConnectUI = null;
     let walletConnected = false;
     let currentNetwork = 'mainnet';
     let currentWalletAddress = null;
-    let tonBalance = '0';
-    let ydBalance = '0';
     
-    const manifestUrl = 'https://binom0x.github.io/Y-bot/tonconnect-manifest.json';
-    const TONCENTER_API_KEY = '70abed234ae5b8c649d7bd66031ea086d06f71ed861516b5d7768de807d5b81a';
-    //const MAINNET_API = `https://toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
-    //const TESTNET_API = `https://testnet.toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
-    const MAINNET_API = 'https://toncenter.com/api/v2/getAddressInformation?address=';
-    const TESTNET_API = 'https://testnet.toncenter.com/api/v2/getAddressInformation?address=';
-    const YD_JETTON_MASTER = 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+    // Конфигурация TON API (если ключ не работает, используйте публичный эндпоинт)
+    const TONCENTER_API_KEY = '70abed234ae5b8c649d7bd66031ea086d06f71ed861516b5d7768de807d5b81a'; // Замените на свой
+    // Для публичного доступа (без ключа) раскомментируйте следующие строки и закомментируйте верхние:
+    // const MAINNET_API = 'https://toncenter.com/api/v2/getAddressInformation?address=';
+    // const TESTNET_API = 'https://testnet.toncenter.com/api/v2/getAddressInformation?address=';
+    const MAINNET_API = `https://toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
+    const TESTNET_API = `https://testnet.toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
     
-    function getApiBase() { return currentNetwork === 'mainnet' ? MAINNET_API : TESTNET_API; }
+    const YD_JETTON_MASTER = 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Замените на реальный адрес
+    
+    function getApiBase() {
+        return currentNetwork === 'mainnet' ? MAINNET_API : TESTNET_API;
+    }
     
     // Улучшенная проверка адреса
     function isValidTonAddress(address) {
         if (!address || typeof address !== 'string') return false;
+        address = address.trim();
         if ((address.startsWith('EQ') || address.startsWith('UQ')) && address.length >= 40) return true;
         if (/^0:[0-9a-fA-F]{64}$/.test(address) || /^[0-9a-fA-F]{64}$/.test(address)) return true;
         return false;
     }
     
     // ---------------------- TELEGRAM -------------------------
-    if (window.Telegram && window.Telegram.WebApp) { tg = window.Telegram.WebApp; tg.ready(); tg.expand(); }
+    if (window.Telegram && window.Telegram.WebApp) { 
+        tg = window.Telegram.WebApp; 
+        tg.ready(); 
+        tg.expand(); 
+    }
     
     function getTelegramUser() {
         if (!tg) return null;
@@ -209,7 +214,7 @@
         y_cources.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
     }).catch(err => console.error("Ошибка загрузки каталога:", err));
     
-    // ---------------------- ОФЕРТЫ -------------------------
+    // ---------------------- ОФЕРТЫ И МОДАЛЬНЫЕ ОКНА -------------------------
     function loadOfferByType(type) {
         if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
         const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
@@ -228,7 +233,7 @@
     document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
     window.onclick = (event) => { if(event.target === document.getElementById('offerModal')) closeOfferModal(); };
     
-    // ---------------------- ПОКУПКА -------------------------
+    // ---------------------- ЛОГИКА ПОКУПКИ (MAIN BUTTON) -------------------------
     function getSelectedPaymentMethod() {
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
         if (activeTabId === 'tab2') return document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value || 'stars';
@@ -278,19 +283,25 @@
     // ======================== TON CONNECT ========================
     function loadTonConnectScript() {
         return new Promise((resolve, reject) => {
-            if (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) { resolve(); return; }
+            if (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) {
+                resolve();
+                return;
+            }
             const urls = [
                 'https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js',
                 'https://cdn.jsdelivr.net/npm/@tonconnect/ui@latest/dist/tonconnect-ui.min.js'
             ];
             let idx = 0;
             function attemptLoad() {
-                if (idx >= urls.length) { reject(new Error('Не удалось загрузить TON Connect UI')); return; }
+                if (idx >= urls.length) {
+                    reject(new Error('Не удалось загрузить TON Connect UI'));
+                    return;
+                }
                 const script = document.createElement('script');
                 script.src = urls[idx];
                 script.onload = () => {
                     if (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) resolve();
-                    else reject(new Error('TON Connect UI загружен, но конструктор не найден'));
+                    else reject(new Error('Конструктор не найден'));
                 };
                 script.onerror = () => { idx++; attemptLoad(); };
                 document.head.appendChild(script);
@@ -303,13 +314,20 @@
         try {
             await loadTonConnectScript();
             await new Promise(r => setTimeout(r, 50));
+            const manifestUrl = 'https://binom0x.github.io/Y-bot/tonconnect-manifest.json';
             const manifestCheck = await fetch(manifestUrl, { method: 'HEAD', cache: 'no-store' });
             if (!manifestCheck.ok) throw new Error(`Манифест недоступен (HTTP ${manifestCheck.status})`);
-            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({ manifestUrl, buttonRootId: 'ton-connect-place' });
+            
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: manifestUrl,
+                buttonRootId: 'ton-connect-place'
+            });
+            
             tonConnectUI.onStatusChange(async (wallet) => {
                 if (wallet) {
                     walletConnected = true;
                     currentWalletAddress = wallet.account.address;
+                    console.log("✅ Кошелёк подключён, адрес:", currentWalletAddress);
                     document.getElementById('walletStatusMsg').innerHTML = `✅ Кошелёк подключён: ${currentWalletAddress.slice(0,6)}...${currentWalletAddress.slice(-4)}`;
                     await fetchBalances();
                 } else {
@@ -332,50 +350,57 @@
         const container = document.getElementById('ton-connect-place');
         if (!container) return;
         container.innerHTML = '<button class="connect-btn" id="mockConnectBtn">🔗 Демо-подключение</button>';
-        document.getElementById('mockConnectBtn')?.addEventListener('click', () => {
-            walletConnected = !walletConnected;
-            if (walletConnected) {
-                currentWalletAddress = "EQDemosamplewalletaddress1234";
-                document.getElementById('ton-balance').innerHTML = '124.50 <span>TON</span>';
-                document.getElementById('yd-balance').innerHTML = '8750.00 <span>Y-D</span>';
-                document.getElementById('walletStatusMsg').innerHTML = '✅ Демо-кошелёк активен (балансы фиктивны)';
-            } else {
-                currentWalletAddress = null;
-                document.getElementById('ton-balance').innerHTML = '0.00 <span>TON</span>';
-                document.getElementById('yd-balance').innerHTML = '0.00 <span>Y-D</span>';
-                document.getElementById('walletStatusMsg').innerHTML = 'Демо-режим: кошелёк отключён';
-            }
-        });
+        const mockBtn = document.getElementById('mockConnectBtn');
+        if (mockBtn) {
+            mockBtn.addEventListener('click', () => {
+                walletConnected = !walletConnected;
+                if (walletConnected) {
+                    currentWalletAddress = "EQDemosamplewalletaddress1234";
+                    document.getElementById('ton-balance').innerHTML = '124.50 <span>TON</span>';
+                    document.getElementById('yd-balance').innerHTML = '8750.00 <span>Y-D</span>';
+                    document.getElementById('walletStatusMsg').innerHTML = '✅ Демо-кошелёк активен (балансы фиктивны)';
+                } else {
+                    currentWalletAddress = null;
+                    document.getElementById('ton-balance').innerHTML = '0.00 <span>TON</span>';
+                    document.getElementById('yd-balance').innerHTML = '0.00 <span>Y-D</span>';
+                    document.getElementById('walletStatusMsg').innerHTML = 'Демо-режим: кошелёк отключён';
+                }
+            });
+        }
     }
     
     // ============ ИСПРАВЛЕННАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ БАЛАНСОВ ============
     async function fetchBalances() {
         if (!walletConnected || !currentWalletAddress) {
-            console.warn("Кошелёк не подключён");
+            console.warn("Кошелёк не подключён или адрес не задан");
             return;
         }
+        
+        console.log("Запрос баланса для адреса:", currentWalletAddress);
         if (!isValidTonAddress(currentWalletAddress)) {
-            console.error("Неверный формат TON адреса:", currentWalletAddress);
-            document.getElementById('walletStatusMsg').innerHTML = `⚠️ Неверный формат адреса кошелька. Получено: ${currentWalletAddress}`;
+            console.error("Неверный формат адреса:", currentWalletAddress);
+            document.getElementById('walletStatusMsg').innerHTML = `⚠️ Неверный формат адреса: ${currentWalletAddress}`;
             document.getElementById('ton-balance').innerHTML = `? <span>TON</span>`;
             document.getElementById('yd-balance').innerHTML = `? <span>Y-D</span>`;
             return;
         }
         
         const api = getApiBase();
+        // Формируем URL правильно: если в api нет знака вопроса, добавляем ?address=, иначе &address=
+        const separator = api.includes('?') ? '&' : '?';
+        const tonUrl = `${api}${separator}address=${encodeURIComponent(currentWalletAddress)}`;
+        console.log("Запрос TON баланса:", tonUrl);
         
-        // --- TON баланс с проверкой на HTML-ответ ---
         try {
-            const tonUrl = `${api}&address=${currentWalletAddress}`;
-            console.log("Запрос TON баланса:", tonUrl);
             const tonResp = await fetch(tonUrl);
-            const contentType = tonResp.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const text = await tonResp.text();
-                console.error("Ответ не JSON (возможно, ошибка API):", text.substring(0, 200));
-                throw new Error(`API вернул ${tonResp.status} ${tonResp.statusText} (не JSON). Возможно, неверный API-ключ или лимит исчерпан.`);
+            if (!tonResp.ok) throw new Error(`HTTP ${tonResp.status}`);
+            const text = await tonResp.text();
+            let tonData;
+            try {
+                tonData = JSON.parse(text);
+            } catch (e) {
+                throw new Error("Ответ не JSON: " + text.substring(0, 100));
             }
-            const tonData = await tonResp.json();
             if (tonData.ok && tonData.result && typeof tonData.result.balance !== 'undefined') {
                 const balanceNano = parseInt(tonData.result.balance, 10);
                 const tonBalanceFormatted = (balanceNano / 1e9).toFixed(4);
@@ -387,14 +412,14 @@
         } catch (err) {
             console.error("Ошибка получения TON баланса:", err);
             document.getElementById('ton-balance').innerHTML = `⚠️ <span>TON</span>`;
-            document.getElementById('walletStatusMsg').innerHTML = `❌ Ошибка получения TON баланса: ${err.message}. Попробуйте позже.`;
+            document.getElementById('walletStatusMsg').innerHTML = `❌ Ошибка TON: ${err.message}`;
         }
         
-        // --- YD баланс (только если реальный мастер) ---
+        // YD баланс – без изменений (пропускается, если мастер-адрес – заглушка)
         const isRealJettonMaster = YD_JETTON_MASTER && YD_JETTON_MASTER.startsWith('EQ') && YD_JETTON_MASTER !== 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
         if (isRealJettonMaster) {
             try {
-                const ydUrl = `${api}&address=${YD_JETTON_MASTER}&method=getWalletByOwner&owner=${currentWalletAddress}`;
+                const ydUrl = `${api}${separator}address=${YD_JETTON_MASTER}&method=getWalletByOwner&owner=${currentWalletAddress}`;
                 const ydResp = await fetch(ydUrl);
                 const ydData = await ydResp.json();
                 if (ydData.ok && ydData.result && typeof ydData.result.balance !== 'undefined') {
@@ -405,7 +430,7 @@
                     document.getElementById('yd-balance').innerHTML = `0.00 <span>Y-D</span>`;
                 }
             } catch (err) {
-                console.error("Ошибка получения YD баланса:", err);
+                console.error("Ошибка YD баланса:", err);
                 document.getElementById('yd-balance').innerHTML = `? <span>Y-D</span>`;
             }
         } else {
@@ -423,26 +448,71 @@
         if(walletConnected) fetchBalances();
     }
     
-    // Функция отключения кошелька (оставлена на случай, если понадобится, но кнопка удалена)
-    async function disconnectWallet() {
-        if(tonConnectUI) {
-            await tonConnectUI.disconnect();
-        } else if (walletConnected) {
-            walletConnected = false;
-            currentWalletAddress = null;
-            document.getElementById('ton-balance').innerHTML = '0.00 <span>TON</span>';
-            document.getElementById('yd-balance').innerHTML = '0.00 <span>Y-D</span>';
-            document.getElementById('walletStatusMsg').innerHTML = 'Кошелёк отключён';
+    document.getElementById('mainnetBtn')?.addEventListener('click', () => setNetwork(false));
+    document.getElementById('testnetBtn')?.addEventListener('click', () => setNetwork(true));
+    document.getElementById('refreshBalanceBtn')?.addEventListener('click', () => { 
+        if(walletConnected) fetchBalances(); 
+        else document.getElementById('walletStatusMsg').innerHTML = 'Подключите кошелёк для обновления баланса'; 
+    });
+    
+    // Замена эмодзи на иконки токенов
+    function setTokenIcon(tokenName, iconUrl, altText) {
+        const items = document.querySelectorAll('.balance-item');
+        for (let item of items) {
+            const titleElem = item.querySelector('.balance-info h4');
+            if (titleElem && titleElem.innerText.trim() === tokenName) {
+                const iconDiv = item.querySelector('.balance-icon');
+                if (iconDiv) {
+                    iconDiv.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = iconUrl;
+                    img.alt = altText;
+                    img.style.width = '28px';
+                    img.style.height = '28px';
+                    img.style.objectFit = 'contain';
+                    img.onerror = () => {
+                        iconDiv.innerHTML = tokenName === 'TON' ? '⚡' : '🟡';
+                        iconDiv.style.fontSize = '24px';
+                    };
+                    iconDiv.appendChild(img);
+                }
+                break;
+            }
         }
     }
     
-    document.getElementById('mainnetBtn')?.addEventListener('click', () => setNetwork(false));
-    document.getElementById('testnetBtn')?.addEventListener('click', () => setNetwork(true));
-    document.getElementById('refreshBalanceBtn')?.addEventListener('click', () => { if(walletConnected) fetchBalances(); else document.getElementById('walletStatusMsg').innerHTML = 'Подключите кошелёк для обновления баланса'; });
+    const OFFICIAL_TON_ICON = 'https://cryptologos.cc/logos/toncoin-ton-logo.svg?v=024';
+    setTokenIcon('TON', OFFICIAL_TON_ICON, 'TON Coin');
     
-    // Запуск
+    async function loadYDTokenIconFromManifest() {
+        try {
+            const manifestUrl = 'https://binom0x.github.io/Y-bot/tonconnect-manifest.json';
+            const response = await fetch(manifestUrl, { cache: 'force-cache' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const manifestData = await response.json();
+            let ydIconUrl = manifestData.ydIconUrl || manifestData.iconUrl || (manifestData.icons?.[0]?.url);
+            if (ydIconUrl) {
+                if (ydIconUrl.startsWith('/')) {
+                    const baseUrl = manifestUrl.substring(0, manifestUrl.lastIndexOf('/') + 1);
+                    ydIconUrl = baseUrl + ydIconUrl.replace(/^\//, '');
+                } else if (!ydIconUrl.startsWith('http')) {
+                    const baseUrl = manifestUrl.substring(0, manifestUrl.lastIndexOf('/') + 1);
+                    ydIconUrl = baseUrl + ydIconUrl;
+                }
+                setTokenIcon('Y-D', ydIconUrl, 'Y-D Token');
+            } else {
+                throw new Error('Нет иконки в манифесте');
+            }
+        } catch (err) {
+            console.warn('Не удалось загрузить иконку Y-D:', err);
+            const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%2330a2ff' /%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-weight='bold'%3EY-D%3C/text%3E%3C/svg%3E";
+            setTokenIcon('Y-D', fallbackSvg, 'Y-D (заглушка)');
+        }
+    }
+    
     window.addEventListener('DOMContentLoaded', () => {
         initTonConnect();
+        loadYDTokenIconFromManifest();
     });
 </script>
 </body>
