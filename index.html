@@ -152,10 +152,16 @@
     const TONCENTER_API_KEY = '70abed234ae5b8c649d7bd66031ea086d06f71ed861516b5d7768de807d5b81a'; // Замените API-ключ на свой с https://toncenter.com
     const MAINNET_API = `https://toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
     const TESTNET_API = `https://testnet.toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
-    const YD_JETTON_MASTER = 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // YD Jetton баланс (ЗАМЕНИТЕ НА РЕАЛЬНЫЙ АДРЕС)
+    // ⚠️ Замените на реальный адрес Jetton Master вашего токена Y-D, когда он станет известен
+    const YD_JETTON_MASTER = 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
     
     function getApiBase() {
         return currentNetwork === 'mainnet' ? MAINNET_API : TESTNET_API;
+    }
+    
+    // Вспомогательная функция для проверки валидности TON адреса (простая)
+    function isValidTonAddress(address) {
+        return address && (address.startsWith('EQ') || address.startsWith('UQ')) && address.length === 48;
     }
     
     // ---------------------- TELEGRAM -------------------------
@@ -275,7 +281,7 @@
     }); }
     function clearSelectedProduct() { selectedProduct = null; document.getElementById('card_programs').selectedIndex=0; document.getElementById('Y_cources').selectedIndex=0; document.getElementById('selected_program').innerHTML='Ничего не выбрано'; document.getElementById('selected_cource').innerHTML='Ничего не выбрано'; updateMainButton(); }
     
-    // ======================== TON CONNECT (ИСПРАВЛЕНАЯ ИНИЦИАЛИЗАЦИЯ) ========================
+    // ======================== TON CONNECT (ИСПРАВЛЕННАЯ ИНИЦИАЛИЗАЦИЯ) ========================
     function loadTonConnectScript() {
         return new Promise((resolve, reject) => {
             if (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) {
@@ -295,7 +301,6 @@
                 const script = document.createElement('script');
                 script.src = urls[idx];
                 script.onload = () => {
-                    // Проверяем, что объект TON_CONNECT_UI появился
                     if (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) {
                         resolve();
                     } else {
@@ -312,13 +317,11 @@
     async function initTonConnect() {
         try {
             await loadTonConnectScript();
-            await new Promise(r => setTimeout(r, 50)); // Небольшая задержка для стабильности
+            await new Promise(r => setTimeout(r, 50));
             
-            // Проверим доступность манифеста
             const manifestCheck = await fetch(manifestUrl, { method: 'HEAD', cache: 'no-store' });
             if (!manifestCheck.ok) throw new Error(`Манифест недоступен (HTTP ${manifestCheck.status})`);
             
-            // ✅ ИСПРАВЛЕНО: используем TON_CONNECT_UI.TonConnectUI
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
                 manifestUrl: manifestUrl,
                 buttonRootId: 'ton-connect-place'
@@ -369,44 +372,69 @@
         }
     }
     
-    // Функция получения балансов (TON и YD)
+    // ============ ИСПРАВЛЕННАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ БАЛАНСОВ ============
     async function fetchBalances() {
-        if (!walletConnected || !currentWalletAddress) return;
+        if (!walletConnected || !currentWalletAddress) {
+            console.warn("Кошелёк не подключён");
+            return;
+        }
+        
+        // Проверяем формат TON адреса
+        if (!isValidTonAddress(currentWalletAddress)) {
+            console.error("Неверный формат TON адреса:", currentWalletAddress);
+            document.getElementById('walletStatusMsg').innerHTML = `⚠️ Неверный формат адреса кошелька. Ожидается адрес TON (начинается с EQ/UQ).`;
+            document.getElementById('ton-balance').innerHTML = `? <span>TON</span>`;
+            document.getElementById('yd-balance').innerHTML = `? <span>Y-D</span>`;
+            return;
+        }
+        
+        const api = getApiBase();
+        
+        // --- Запрос TON баланса (обязательный) ---
         try {
-            const api = getApiBase();
-            // TON баланс
-            const tonResp = await fetch(`${api}&address=${currentWalletAddress}`);
+            const tonUrl = `${api}&address=${currentWalletAddress}`;
+            console.log("Запрос TON баланса:", tonUrl);
+            const tonResp = await fetch(tonUrl);
+            if (!tonResp.ok) throw new Error(`HTTP ${tonResp.status}`);
             const tonData = await tonResp.json();
-            if (tonData.ok) {
-                let balanceNano = tonData.result.balance;
-                tonBalance = (balanceNano / 1e9).toFixed(4);
-                document.getElementById('ton-balance').innerHTML = `${tonBalance} <span>TON</span>`;
-            } else {
-                document.getElementById('ton-balance').innerHTML = '0.00 <span>TON</span>';
-            }
             
-            // YD Jetton баланс (ЗАМЕНИТЕ НА РЕАЛЬНЫЙ АДРЕС)
-            if (YD_JETTON_MASTER && YD_JETTON_MASTER.startsWith('EQ')) {
-                try {
-                    const jettonWalletResp = await fetch(`${api}&address=${YD_JETTON_MASTER}&method=getWalletByOwner&owner=${currentWalletAddress}`);
-                    const jData = await jettonWalletResp.json();
-                    if (jData.ok && jData.result) {
-                        let ydRaw = jData.result.balance || "0";
-                        ydBalance = (parseInt(ydRaw) / 1e9).toFixed(2);
-                        document.getElementById('yd-balance').innerHTML = `${ydBalance} <span>Y-D</span>`;
-                    } else {
-                        document.getElementById('yd-balance').innerHTML = `0.00 <span>Y-D</span>`;
-                    }
-                } catch(e) {
-                    console.error("YD balance fetch error", e);
-                    document.getElementById('yd-balance').innerHTML = `0.00 <span>Y-D</span>`;
-                }
+            if (tonData.ok && tonData.result && typeof tonData.result.balance !== 'undefined') {
+                const balanceNano = parseInt(tonData.result.balance, 10);
+                const tonBalanceFormatted = (balanceNano / 1e9).toFixed(4);
+                document.getElementById('ton-balance').innerHTML = `${tonBalanceFormatted} <span>TON</span>`;
+                document.getElementById('walletStatusMsg').innerHTML = `✅ Баланс TON: ${tonBalanceFormatted}`;
             } else {
-                document.getElementById('yd-balance').innerHTML = `0.00 <span>Y-D</span>`;
+                throw new Error("API вернул ошибку: " + JSON.stringify(tonData));
             }
-        } catch(err) {
-            console.error("balance fetch error", err);
-            document.getElementById('walletStatusMsg').innerHTML = "⚠️ Ошибка получения баланса";
+        } catch (err) {
+            console.error("Ошибка получения TON баланса:", err);
+            document.getElementById('ton-balance').innerHTML = `⚠️ <span>TON</span>`;
+            document.getElementById('walletStatusMsg').innerHTML = `❌ Ошибка получения TON баланса: ${err.message}`;
+        }
+        
+        // --- Запрос баланса YD (только если указан реальный Jetton Master, а не заглушка) ---
+        const isRealJettonMaster = YD_JETTON_MASTER && YD_JETTON_MASTER.startsWith('EQ') && YD_JETTON_MASTER !== 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+        if (isRealJettonMaster) {
+            try {
+                const ydUrl = `${api}&address=${YD_JETTON_MASTER}&method=getWalletByOwner&owner=${currentWalletAddress}`;
+                console.log("Запрос YD баланса:", ydUrl);
+                const ydResp = await fetch(ydUrl);
+                const ydData = await ydResp.json();
+                if (ydData.ok && ydData.result && typeof ydData.result.balance !== 'undefined') {
+                    const ydRaw = parseInt(ydData.result.balance, 10);
+                    const ydFormatted = (ydRaw / 1e9).toFixed(2);
+                    document.getElementById('yd-balance').innerHTML = `${ydFormatted} <span>Y-D</span>`;
+                } else {
+                    document.getElementById('yd-balance').innerHTML = `0.00 <span>Y-D</span>`;
+                    console.warn("YD баланс не получен, возможно, у кошелька нет токенов", ydData);
+                }
+            } catch (err) {
+                console.error("Ошибка получения YD баланса:", err);
+                document.getElementById('yd-balance').innerHTML = `? <span>Y-D</span>`;
+            }
+        } else {
+            console.log("YD Jetton Master не указан или является заглушкой, пропускаем запрос");
+            document.getElementById('yd-balance').innerHTML = `0.00 <span>Y-D</span>`;
         }
     }
     
