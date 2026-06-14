@@ -146,8 +146,10 @@
     
     const manifestUrl = 'https://binom0x.github.io/Y-bot/tonconnect-manifest.json';
     const TONCENTER_API_KEY = '70abed234ae5b8c649d7bd66031ea086d06f71ed861516b5d7768de807d5b81a';
-    const MAINNET_API = `https://toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
-    const TESTNET_API = `https://testnet.toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
+    //const MAINNET_API = `https://toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
+    //const TESTNET_API = `https://testnet.toncenter.com/api/v2/?api_key=${TONCENTER_API_KEY}`;
+    const MAINNET_API = 'https://toncenter.com/api/v2/getAddressInformation?address=';
+    const TESTNET_API = 'https://testnet.toncenter.com/api/v2/getAddressInformation?address=';
     const YD_JETTON_MASTER = 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
     
     function getApiBase() { return currentNetwork === 'mainnet' ? MAINNET_API : TESTNET_API; }
