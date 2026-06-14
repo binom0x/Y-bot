@@ -9,6 +9,37 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- QRCode -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        /* Дополнительные стили для иконок токенов */
+        .balance-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: #f8f9fc;
+            border-radius: 28px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .balance-icon img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            display: block;
+        }
+        /* адаптация для темной темы Telegram */
+        @media (prefers-color-scheme: dark) {
+            .balance-icon {
+                background: #2c2c2e;
+            }
+        }
+        .wallet-card {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            margin-bottom: 16px;
+        }
+    </style>
 </head>
 <body>
 
@@ -465,9 +496,104 @@
     document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
     document.getElementById('refreshBalanceBtn')?.addEventListener('click', () => { if(walletConnected) fetchBalances(); else document.getElementById('walletStatusMsg').innerHTML = 'Подключите кошелёк для обновления баланса'; });
     
-    // Запуск TON Connect после полной загрузки DOM
+    // ======================== ЗАМЕНА ЭМОДЗИ НА ОФИЦИАЛЬНЫЕ ИКОНКИ ТОКЕНОВ ========================
+    // Функция замены иконки для конкретного токена по названию (h4)
+    function setTokenIcon(tokenName, iconUrl, altText) {
+        const items = document.querySelectorAll('.balance-item');
+        for (let item of items) {
+            const titleElem = item.querySelector('.balance-info h4');
+            if (titleElem && titleElem.innerText.trim() === tokenName) {
+                const iconDiv = item.querySelector('.balance-icon');
+                if (iconDiv) {
+                    // Очищаем содержимое (эмодзи или текст)
+                    iconDiv.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = iconUrl;
+                    img.alt = altText;
+                    img.style.width = '28px';
+                    img.style.height = '28px';
+                    img.style.objectFit = 'contain';
+                    // Обработка ошибки загрузки: показываем placeholder-иконку
+                    img.onerror = () => {
+                        console.warn(`Не удалось загрузить иконку для ${tokenName}: ${iconUrl}`);
+                        iconDiv.innerHTML = tokenName === 'TON' ? '⚡' : '🟡';
+                        iconDiv.style.fontSize = '24px';
+                        iconDiv.style.display = 'flex';
+                        iconDiv.style.alignItems = 'center';
+                        iconDiv.style.justifyContent = 'center';
+                    };
+                    iconDiv.appendChild(img);
+                }
+                break;
+            }
+        }
+    }
+    
+    // Официальная иконка TON (высокое качество, векторный SVG)
+    const OFFICIAL_TON_ICON = 'https://cryptologos.cc/logos/toncoin-ton-logo.svg?v=024';
+    // Устанавливаем иконку TON незамедлительно (эмодзи заменяются на SVG)
+    setTokenIcon('TON', OFFICIAL_TON_ICON, 'TON Coin');
+    
+    // Функция загрузки иконки Y-D из манифеста и установки
+    async function loadYDTokenIconFromManifest() {
+        try {
+            const response = await fetch(manifestUrl, { cache: 'force-cache' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const manifestData = await response.json();
+            
+            let ydIconUrl = null;
+            // Приоритет: поле 'ydIconUrl' в манифесте (специально для Y-D)
+            if (manifestData.ydIconUrl && typeof manifestData.ydIconUrl === 'string') {
+                ydIconUrl = manifestData.ydIconUrl;
+            } 
+            // Если нет, используем стандартный iconUrl из манифеста (иконка приложения)
+            else if (manifestData.iconUrl && typeof manifestData.iconUrl === 'string') {
+                ydIconUrl = manifestData.iconUrl;
+            }
+            // Дополнительная проверка: если в массиве icons есть иконка, берём первую подходящую
+            else if (manifestData.icons && Array.isArray(manifestData.icons) && manifestData.icons.length > 0) {
+                ydIconUrl = manifestData.icons[0].url || manifestData.icons[0];
+            }
+            
+            if (ydIconUrl) {
+                // Убедимся, что URL абсолютный (если относительный — докрутим относительно манифеста)
+                if (ydIconUrl.startsWith('/')) {
+                    const baseUrl = manifestUrl.substring(0, manifestUrl.lastIndexOf('/') + 1);
+                    ydIconUrl = baseUrl + ydIconUrl.replace(/^\//, '');
+                } else if (!ydIconUrl.startsWith('http')) {
+                    const baseUrl = manifestUrl.substring(0, manifestUrl.lastIndexOf('/') + 1);
+                    ydIconUrl = baseUrl + ydIconUrl;
+                }
+                console.log('✅ Иконка Y-D загружена из манифеста:', ydIconUrl);
+                setTokenIcon('Y-D', ydIconUrl, 'Y-D Token (из манифеста)');
+            } else {
+                throw new Error('В манифесте не найдено поле iconUrl / ydIconUrl');
+            }
+        } catch (err) {
+            console.warn('Не удалось получить иконку Y-D из манифеста:', err);
+            // Создаём SVG-заглушку с символом Y-D, стилизованную под бренд (но с пометкой, чтобы разработчик заменил)
+            const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%2330a2ff' /%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-weight='bold'%3EY-D%3C/text%3E%3C/svg%3E";
+            setTokenIcon('Y-D', fallbackSvg, 'Y-D (заглушка)');
+            document.getElementById('walletStatusMsg') && (document.getElementById('walletStatusMsg').innerHTML += ' | ⚠️ Иконка Y-D установлена по умолчанию (обновите manifest)');
+        }
+    }
+    
+    // Дополнительно: следим за изменениями темы (чтобы иконки красиво отображались)
+    if (tg && tg.themeParams) {
+        const applyTheme = () => {
+            const bgColor = tg.themeParams.bg_color || '#ffffff';
+            document.querySelectorAll('.balance-icon').forEach(el => {
+                el.style.backgroundColor = tg.themeParams.secondary_bg_color || '#f0f2f5';
+            });
+        };
+        applyTheme();
+        if (tg.onEvent) tg.onEvent('themeChanged', applyTheme);
+    }
+    
+    // Запуск загрузки иконки Y-D из манифеста после готовности DOM
     window.addEventListener('DOMContentLoaded', () => {
         initTonConnect();
+        loadYDTokenIconFromManifest();
     });
 </script>
 </body>
