@@ -147,12 +147,20 @@
         return currentNetwork === 'mainnet' ? MAINNET_API : TESTNET_API;
     }
     
-    // Проверка адреса: только EQ/UQ длина 48
-    function isValidTonAddress(address) {
-        if (!address || typeof address !== 'string') return false;
-        address = address.trim();
-        return (address.startsWith('EQ') || address.startsWith('UQ')) && address.length === 48;
-    }
+    // Проверка адреса
+	function isValidTonAddress(address) {
+		if (!address || typeof address !== 'string') return false;
+		address = address.trim();
+		// Стандартный user‑friendly формат (EQ/UQ)
+		if ((address.startsWith('EQ') || address.startsWith('UQ')) && address.length >= 40) {
+			return true;
+		}
+		// Raw формат: 0: + 64 шестнадцатеричных символа
+		if (/^0:[0-9a-fA-F]{64}$/.test(address)) {
+			return true;
+		}
+		return false;
+	}
     
     // ---------------------- TELEGRAM -------------------------
     if (window.Telegram && window.Telegram.WebApp) { 
