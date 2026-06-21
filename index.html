@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
     <title>Y - Ваш ключ от будущего!</title>
-    <!-- Стили -->
+    <!-- Стили (без изменений) -->
     <style>
         @import url("https://fonts.googleapis.com/css?family=Open+Sans:400,600,700");
         @import url("https://netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.css");
@@ -522,7 +522,7 @@
 <body>
 
 <main>
-    <!-- Вкладки -->
+    <!-- Вкладки (без изменений) -->
     <input id="tab1" type="radio" name="tabs" checked />
     <label for="tab1">Ваши данные</label>
     <input id="tab2" type="radio" name="tabs" />
@@ -532,7 +532,6 @@
     <input id="tab4" type="radio" name="tabs" />
     <label for="tab4">Баланс</label>
 
-    <!-- Секция 1: Данные -->
     <section id="content1">
         <div class="dashboard">
             <div class="user-info">
@@ -547,7 +546,6 @@
         </div>
     </section>
 
-    <!-- Секция 2: Y-Карта -->
     <section id="content2">
         <h2>Y-Карта</h2>
         <p><select id="card_programs" name="Y-card"><option value="">Выберите...</option></select></p>
@@ -563,7 +561,6 @@
         <button id="buyCardBtn" class="connect-btn" style="width:100%; margin-top: 20px;">Купить</button>
     </section>
 
-    <!-- Секция 3: Y-MBA -->
     <section id="content3">
         <h2>Y-MBA</h2>
         <p><select id="Y_cources" name="Y-MBA"><option value="">Выберите...</option></select></p>
@@ -579,7 +576,6 @@
         <button id="buyMbaBtn" class="connect-btn" style="width:100%; margin-top: 20px;">Купить</button>
     </section>
 
-    <!-- Секция 4: Баланс -->
     <section id="content4">
         <div class="balance-dashboard">
             <div class="wallet-card">
@@ -621,7 +617,7 @@
     </section>
 </main>
 
-<!-- МОДАЛЬНОЕ ОКНО НАСТРОЙКИ КОШЕЛЬКА -->
+<!-- Модальные окна (без изменений) -->
 <div id="walletSetupModal" class="modal" style="display: none;">
     <div class="modal-content" style="max-width: 480px;">
         <div class="modal-header">
@@ -636,7 +632,6 @@
                     <button id="btnImportWallet" class="connect-btn" style="width:100%; background: #6c819a;">🔑 Импортировать существующий</button>
                 </div>
             </div>
-            <!-- Шаг 2a: создание -->
             <div id="step2create" style="display: none;">
                 <p><strong>Ваш новый кошелёк создан!</strong></p>
                 <p><strong>Публичный адрес:</strong><br><span id="newPublicKey" style="font-family: monospace; word-break: break-all; background: #f0f4f8; padding: 8px; border-radius: 8px; display: block;"></span></p>
@@ -648,7 +643,6 @@
                     <button id="btnBackFromCreate" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
                 </div>
             </div>
-            <!-- Шаг 2b: импорт -->
             <div id="step2import" style="display: none;">
                 <p>Введите ваш приватный ключ (base58):</p>
                 <input id="importPrivateKey" type="text" placeholder="Вставьте приватный ключ" />
@@ -662,7 +656,6 @@
     </div>
 </div>
 
-<!-- Модалка оферты -->
 <div id="offerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -673,55 +666,61 @@
     </div>
 </div>
 
-<!-- ===== ВСЕ СКРИПТЫ ПЕРЕНЕСЕНЫ В КОНЕЦ BODY ===== -->
+<!-- ===== СКРИПТЫ ===== -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
+<!-- Попытка загрузить Solana Web3 с проверенным CDN -->
 <script>
-    // Функции загрузки Solana
-    function onSolanaLoaded() {
+    // Функция для проверки загрузки
+    function tryStartApp() {
         const msgEl = document.getElementById('walletStatusMsg');
-        if (!msgEl) {
-            // Если элемент ещё не создан, ждём 100 мс и пробуем снова
-            setTimeout(onSolanaLoaded, 100);
-            return;
-        }
         if (typeof solana !== 'undefined') {
-            console.log('✅ Solana Web3 загружена');
+            console.log('✅ Solana Web3 загружена через IIFE');
             if (window.startApp) window.startApp();
         } else {
-            msgEl.innerHTML =
-                '⚠️ Библиотека загружена, но не инициализирована. Попробуйте обновить страницу.';
+            // Если IIFE не сработала, пробуем загрузить через fetch + eval
+            console.warn('IIFE не экспортировала solana, пробуем fetch+eval...');
+            if (msgEl) msgEl.innerHTML = '⏳ Загрузка альтернативным способом...';
+            fetch('https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js')
+                .then(res => res.text())
+                .then(code => {
+                    // Выполняем код в глобальном контексте
+                    eval(code);
+                    if (typeof solana !== 'undefined') {
+                        console.log('✅ Solana загружена через eval');
+                        if (window.startApp) window.startApp();
+                    } else {
+                        if (msgEl) msgEl.innerHTML = '❌ Не удалось загрузить Solana даже через eval. Попробуйте обновить страницу.';
+                    }
+                })
+                .catch(err => {
+                    console.error('Ошибка загрузки через fetch:', err);
+                    if (msgEl) msgEl.innerHTML = '❌ Ошибка загрузки библиотеки. Проверьте интернет.';
+                });
         }
     }
 
-    function onSolanaError() {
+    // Загружаем скрипт с IIFE и по окончании проверяем
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js';
+    script.onload = tryStartApp;
+    script.onerror = function() {
         const msgEl = document.getElementById('walletStatusMsg');
-        if (!msgEl) return;
-        msgEl.innerHTML =
-            '❌ Не удалось загрузить библиотеку Solana. Попробуйте обновить страницу или вставьте в консоль: ' +
-            'const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js";' +
-            's.onload=()=>{if(window.solana) window.startApp();};document.head.appendChild(s);';
-    }
-</script>
+        if (msgEl) msgEl.innerHTML = '❌ Не удалось загрузить библиотеку Solana. Попробуйте обновить страницу.';
+        // Пробуем fetch+eval как резерв
+        tryStartApp();
+    };
+    document.head.appendChild(script);
 
-<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"
-        onload="onSolanaLoaded()"
-        onerror="onSolanaError()">
-</script>
-
-<script>
-    // Резервный таймер
-    setTimeout(function() {
-        if (typeof solana === 'undefined') {
-            const msg = document.getElementById('walletStatusMsg');
-            if (msg && !msg.innerHTML.includes('загружена')) {
-                msg.innerHTML = '⏳ Библиотека Solana всё ещё загружается... Если это слишком долго, обновите страницу.';
-            }
+    // Также добавляем таймер, чтобы запустить приложение, если скрипт уже был загружен ранее
+    setTimeout(() => {
+        if (typeof solana !== 'undefined' && window.startApp) {
+            window.startApp();
         }
-    }, 5000);
+    }, 1000);
 </script>
 
-<!-- Основной скрипт приложения -->
+<!-- Основной код приложения -->
 <script>
     // ========================================================================
     //  КОНФИГУРАЦИЯ
@@ -729,14 +728,13 @@
     const API_BASE_URL = 'http://localhost:8000';  // замените на ваш сервер
 
     // ========================================================================
-    //  ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ (вынесен в глобальную функцию)
+    //  ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ
     // ========================================================================
     window.startApp = function() {
         // Проверяем, загружена ли библиотека
         if (typeof solana === 'undefined') {
             const msg = document.getElementById('walletStatusMsg');
-            if (msg) msg.innerHTML =
-                '❌ Библиотека Solana не загружена. Проверьте интернет или обновите страницу.';
+            if (msg) msg.innerHTML = '❌ Библиотека Solana не загружена. Проверьте интернет или обновите страницу.';
             return;
         }
 
@@ -1115,22 +1113,10 @@
         initWallet();
     };
 
-    // Если библиотека уже загружена (например, при повторном открытии), запускаем сразу
-    if (typeof solana !== 'undefined') {
+    // Если библиотека уже загружена, запускаем сразу (для случая, когда скрипт уже был загружен ранее)
+    if (typeof solana !== 'undefined' && window.startApp) {
         window.startApp();
     }
-</script>
-
-<!-- Дополнительная проверка, если скрипт не загрузился -->
-<script>
-    (function checkAgain() {
-        if (typeof solana === 'undefined') {
-            const msg = document.getElementById('walletStatusMsg');
-            if (msg && !msg.innerHTML.includes('загружена')) {
-                msg.innerHTML = '❌ Библиотека Solana не загружена. Попробуйте обновить страницу или выполнить инструкцию в консоли.';
-            }
-        }
-    })();
 </script>
 
 </body>
