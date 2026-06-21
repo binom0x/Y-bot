@@ -681,6 +681,28 @@
     const solana = window.solanaWeb3 || window.solana;
 
     // ========================================================================
+    //  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С BASE64 (БЕЗ BUFFER)
+    // ========================================================================
+    function arrayToBase64(uint8Array) {
+        let binary = '';
+        const len = uint8Array.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(uint8Array[i]);
+        }
+        return btoa(binary);
+    }
+
+    function base64ToUint8Array(base64) {
+        const binary = atob(base64);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    // ========================================================================
     //  КОНФИГУРАЦИЯ
     // ========================================================================
     const API_BASE_URL = 'http://localhost:8000';  // замените на ваш сервер
@@ -911,11 +933,8 @@
 
         function createWalletFromPrivateKey(privateKey) {
             try {
-                // privateKey – строка в base64
-                const buffer = Buffer.from(privateKey, 'base64');
-                const keypair = solana.Keypair.fromSecretKey(
-                    Uint8Array.from(buffer)
-                );
+                const bytes = base64ToUint8Array(privateKey);
+                const keypair = solana.Keypair.fromSecretKey(bytes);
                 return keypair;
             } catch (e) {
                 console.error('Ошибка импорта:', e);
@@ -1006,8 +1025,8 @@
         document.getElementById('btnCreateWallet').addEventListener('click', () => {
             const newKeypair = generateNewWallet();
             const publicKey = newKeypair.publicKey.toBase58();
-            // Кодируем приватный ключ в base64
-            const privateKey = Buffer.from(newKeypair.secretKey).toString('base64');
+            // Кодируем приватный ключ в base64 без Buffer
+            const privateKey = arrayToBase64(newKeypair.secretKey);
             newPublicKey.textContent = publicKey;
             newPrivateKey.textContent = privateKey;
             window._pendingKeypair = newKeypair;
@@ -1040,7 +1059,7 @@
                 alert('Ошибка: не удалось создать кошелёк.');
                 return;
             }
-            const privateKey = Buffer.from(keypair.secretKey).toString('base64');
+            const privateKey = arrayToBase64(keypair.secretKey);
             savePrivateKey(privateKey);
             setWallet(keypair);
             window._pendingKeypair = null;
