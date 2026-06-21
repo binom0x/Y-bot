@@ -991,8 +991,19 @@
                 return;
             }
             try {
-                // Используем публичный RPC от Ankr – работает без ключа
-                const connection = new solana.Connection('https://rpc.ankr.com/solana', 'confirmed');
+                // Используем публичный RPC с кастомным User-Agent для обхода блокировок
+                const connection = new solana.Connection('https://api.mainnet-beta.solana.com', {
+                    commitment: 'confirmed',
+                    fetch: (url, options) => {
+                        return fetch(url, {
+                            ...options,
+                            headers: {
+                                ...options?.headers,
+                                'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
+                            }
+                        });
+                    }
+                });
                 const balance = await connection.getBalance(solanaKeypair.publicKey);
                 const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
                 solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
