@@ -6,8 +6,39 @@
     <title>Y - Ваш ключ от будущего!</title>
     <!-- QR-код -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <!-- Solana Web3 – основной источник + резерв -->
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+    <!-- Solana Web3 – загружаем с явным onload -->
+    <script>
+        function onSolanaLoaded() {
+            if (typeof solana !== 'undefined') {
+                console.log('✅ Solana Web3 загружена');
+                if (window.startApp) window.startApp();
+            } else {
+                document.getElementById('walletStatusMsg').innerHTML =
+                    '⚠️ Библиотека загружена, но не инициализирована. Попробуйте обновить страницу.';
+            }
+        }
+        function onSolanaError() {
+            document.getElementById('walletStatusMsg').innerHTML =
+                '❌ Не удалось загрузить библиотеку Solana. Попробуйте обновить страницу или вставьте в консоль: ' +
+                'const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js";' +
+                's.onload=()=>{if(window.solana) window.startApp();};document.head.appendChild(s);';
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"
+            onload="onSolanaLoaded()"
+            onerror="onSolanaError()">
+    </script>
+    <script>
+        setTimeout(function() {
+            if (typeof solana === 'undefined') {
+                const msg = document.getElementById('walletStatusMsg');
+                if (msg && !msg.innerHTML.includes('загружена')) {
+                    msg.innerHTML = '⏳ Библиотека Solana всё ещё загружается... Если это слишком долго, обновите страницу.';
+                }
+            }
+        }, 5000);
+    </script>
+    <!-- Стили -->
     <style>
         @import url("https://fonts.googleapis.com/css?family=Open+Sans:400,600,700");
         @import url("https://netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.css");
@@ -676,6 +707,7 @@
     </div>
 </div>
 
+<!-- Основной скрипт приложения -->
 <script>
     // ========================================================================
     //  КОНФИГУРАЦИЯ
@@ -683,9 +715,9 @@
     const API_BASE_URL = 'http://localhost:8000';  // замените на ваш сервер
 
     // ========================================================================
-    //  ЗАПУСК ПРИЛОЖЕНИЯ ПОСЛЕ ЗАГРУЗКИ SOLANA
+    //  ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ (вынесен в глобальную функцию)
     // ========================================================================
-    (function startApp() {
+    window.startApp = function() {
         // Проверяем, загружена ли библиотека
         if (typeof solana === 'undefined') {
             document.getElementById('walletStatusMsg').innerHTML =
@@ -1066,13 +1098,22 @@
 
         // ---------- Запуск ----------
         initWallet();
-    })();
+    };
 
-    // Проверка, если библиотека всё ещё не загружена
-    (function checkSolana() {
+    // Если библиотека уже загружена (например, при повторном открытии), запускаем сразу
+    if (typeof solana !== 'undefined') {
+        window.startApp();
+    }
+</script>
+
+<!-- Дополнительная проверка, если скрипт не загрузился -->
+<script>
+    (function checkAgain() {
         if (typeof solana === 'undefined') {
             const msg = document.getElementById('walletStatusMsg');
-            if (msg) msg.innerHTML = '❌ Библиотека Solana не загружена. Попробуйте обновить страницу или зайти позже.';
+            if (msg && !msg.innerHTML.includes('загружена')) {
+                msg.innerHTML = '❌ Библиотека Solana не загружена. Попробуйте обновить страницу или выполнить инструкцию в консоли.';
+            }
         }
     })();
 </script>
