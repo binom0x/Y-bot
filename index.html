@@ -11,13 +11,11 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <!-- Solana Web3 -->
     <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js"></script>
-    <!-- bip39 – используем надёжный CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bip39/3.0.2/bip39.min.js"></script>
 </head>
 <body>
 
 <main>
-    <!-- Вкладки -->
+    <!-- Вкладки (без изменений) -->
     <input id="tab1" type="radio" name="tabs" checked />
     <label for="tab1">Ваши данные</label>
     <input id="tab2" type="radio" name="tabs" />
@@ -27,7 +25,7 @@
     <input id="tab4" type="radio" name="tabs" />
     <label for="tab4">Баланс</label>
 
-    <!-- Секции -->
+    <!-- Секции (без изменений) -->
     <section id="content1">
         <div class="dashboard">
             <div class="user-info">
@@ -37,13 +35,9 @@
                 <p><strong>Username:</strong> <span id="user-username">—</span></p>
                 <p><strong>Адрес кошелька:</strong> <span id="wallet-address-display">не подключён</span></p>
             </div>
-            <div id="qr-place">
-                <!-- QR-код с адресом кошелька -->
-            </div>
+            <div id="qr-place"></div>
             <div style="margin-top: 20px; text-align: center;">
-                <button id="disconnectWalletBtnMain" class="connect-btn disconnect-btn" style="width: 100%;">
-                    🔌 Отключить кошелёк
-                </button>
+                <button id="disconnectWalletBtnMain" class="connect-btn disconnect-btn" style="width: 100%;">🔌 Отключить кошелёк</button>
             </div>
         </div>
     </section>
@@ -116,14 +110,12 @@
                     <button id="refreshBalanceBtn" class="refresh-balance"><i class="fa fa-refresh"></i> Обновить баланс</button>
                 </div>
             </div>
-            <div id="walletStatusMsg" class="status-message">
-                💡 Загрузка...
-            </div>
+            <div id="walletStatusMsg" class="status-message">💡 Загрузка...</div>
         </div>
     </section>
 </main>
 
-<!-- МОДАЛЬНОЕ ОКНО ПЕРВОГО ЗАПУСКА / ПОВТОРНОГО ПОДКЛЮЧЕНИЯ -->
+<!-- МОДАЛЬНОЕ ОКНО НАСТРОЙКИ КОШЕЛЬКА -->
 <div id="walletSetupModal" class="modal" style="display: none;">
     <div class="modal-content" style="max-width: 480px;">
         <div class="modal-header">
@@ -131,7 +123,6 @@
             <span class="close-modal" id="closeSetupModal" style="display: none;">&times;</span>
         </div>
         <div class="modal-body" id="setupModalBody">
-            <!-- Шаг 1 -->
             <div id="step1">
                 <p>Для работы с приложением необходим кошелёк Solana.</p>
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
@@ -139,17 +130,15 @@
                     <button id="btnImportWallet" class="connect-btn" style="width:100%; background: #6c819a;">🔑 Импортировать существующий</button>
                 </div>
             </div>
-            <!-- Шаг 2a: создание -->
             <div id="step2create" style="display: none;">
                 <p><strong>Ваша мнемоническая фраза (12 слов):</strong></p>
                 <div id="mnemonicDisplay" style="background: #f0f4f8; padding: 16px; border-radius: 16px; font-family: monospace; font-size: 16px; word-break: break-word; margin: 12px 0;"></div>
-                <p style="font-size: 14px; color: #d32f2f;">⚠️ Сохраните эту фразу в надёжном месте! Без неё вы не сможете восстановить доступ к кошельку.</p>
+                <p style="font-size: 14px; color: #d32f2f;">⚠️ Сохраните эту фразу в надёжном месте!</p>
                 <div style="display: flex; gap: 12px; margin-top: 16px;">
                     <button id="btnConfirmCreate" class="connect-btn" style="flex:1;">✅ Я сохранил(а), создать</button>
                     <button id="btnBackFromCreate" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
                 </div>
             </div>
-            <!-- Шаг 2b: импорт -->
             <div id="step2import" style="display: none;">
                 <p>Введите вашу seed-фразу (12 или 24 слова):</p>
                 <textarea id="importSeedInput" rows="4" style="width:100%; padding: 12px; border-radius: 14px; border: 1px solid #cdd9ed; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
@@ -157,7 +146,7 @@
                     <button id="btnConfirmImport" class="connect-btn" style="flex:1;">🔓 Импортировать</button>
                     <button id="btnBackFromImport" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
                 </div>
-                <div id="importError" style="color:red; margin-top: 8px; display: none;">Неверная seed-фраза. Попробуйте снова.</div>
+                <div id="importError" style="color:red; margin-top: 8px; display: none;">Неверная seed-фраза.</div>
             </div>
         </div>
     </div>
@@ -175,346 +164,371 @@
 </div>
 
 <script>
-    // ========================== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ==========================
-    let c_programs = [];
-    let y_cources = [];
-    let selectedProduct = null;
-    let tgUser = null;
-    let tg = null;
-    let cachedOffers = { card: null, mba: null };
+    // ========================================================================
+    //  1. ДИНАМИЧЕСКАЯ ЗАГРУЗКА bip39 С FALLBACK
+    // ========================================================================
+    function loadBip39(callback) {
+        const sources = [
+            'https://cdn.jsdelivr.net/npm/bip39@3.1.0/umd/bip39.min.js',
+            'https://unpkg.com/bip39@3.1.0/umd/bip39.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/bip39/3.1.0/bip39.min.js'
+        ];
+        let index = 0;
 
-    // ---------- Solana Wallet ----------
-    let solanaKeypair = null;
-    let solanaPublicKey = null;
-    let walletConnected = false;
-    let walletAddress = '';
-
-    // ---------- DOM-ссылки ----------
-    const walletSetupModal = document.getElementById('walletSetupModal');
-    const step1 = document.getElementById('step1');
-    const step2create = document.getElementById('step2create');
-    const step2import = document.getElementById('step2import');
-    const mnemonicDisplay = document.getElementById('mnemonicDisplay');
-    const importSeedInput = document.getElementById('importSeedInput');
-    const importError = document.getElementById('importError');
-    const qrPlace = document.getElementById('qr-place');
-    const walletAddressDisplay = document.getElementById('wallet-address-display');
-    const solanaConnectPlace = document.getElementById('solana-connect-place');
-    const solBalanceEl = document.getElementById('sol-balance');
-    const ydBalanceEl = document.getElementById('yd-balance');
-    const walletStatusMsg = document.getElementById('walletStatusMsg');
-    const refreshBalanceBtn = document.getElementById('refreshBalanceBtn');
-    const disconnectBtnMain = document.getElementById('disconnectWalletBtnMain');
-
-    // ---------- Проверка наличия bip39 ----------
-    const bip39Lib = window.bip39 || (typeof bip39 !== 'undefined' ? bip39 : null);
-    if (!bip39Lib) {
-        alert('Ошибка: библиотека bip39 не загружена. Попробуйте обновить страницу.');
-    }
-
-    // ========================== TELEGRAM (опционально) ==========================
-    if (window.Telegram && window.Telegram.WebApp) {
-        tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-    }
-
-    function getTelegramUser() {
-        if (!tg) return null;
-        if (tg.initDataUnsafe?.user) return tg.initDataUnsafe.user;
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('user_id');
-        if (userId) return { id: parseInt(userId,10), first_name: decodeURIComponent(urlParams.get('first_name') || ''), username: decodeURIComponent(urlParams.get('username') || '') };
-        return null;
-    }
-
-    tgUser = getTelegramUser();
-    const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
-
-    if (tgUser) {
-        document.getElementById('user-id').innerHTML = tgUser.id.toString();
-        document.getElementById('user-name').innerHTML = tgUser.first_name || 'Пользователь';
-        document.getElementById('user-username').innerHTML = tgUser.username ? '@' + tgUser.username : '—';
-    } else {
-        document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
-    }
-
-    // ========================== QR-КОД ==========================
-    function displayQRCode(container, text, size = 180, color = '#000000', margin = 2) {
-        const target = typeof container === 'string' ? document.querySelector(container) : container;
-        if (!target) return;
-        target.innerHTML = '';
-        if (!text) {
-            target.innerHTML = '<p style="color: #888; text-align: center;">Кошелёк не подключён</p>';
-            return;
-        }
-        const canvas = document.createElement('canvas');
-        target.appendChild(canvas);
-        QRCode.toCanvas(canvas, text, { width: size, margin, color: { dark: color, light: '#ffffff' } }, (error) => {
-            if (error) target.innerHTML = '<p style="color:red;">Ошибка QR</p>';
-        });
-    }
-
-    function updateQRCode() {
-        if (walletConnected && walletAddress) {
-            displayQRCode(qrPlace, walletAddress, 180, tgButtonColor);
-        } else {
-            displayQRCode(qrPlace, null);
-        }
-    }
-
-    // ========================== ЗАГРУЗКА КАТАЛОГА ==========================
-    fetch('content.json').then(r => r.json()).then(data => {
-        c_programs = data[5].product;
-        const s1 = document.getElementById('card_programs');
-        c_programs.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s1.appendChild(opt); });
-        y_cources = data[6];
-        const s2 = document.getElementById('Y_cources');
-        y_cources.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
-    }).catch(err => console.error("Ошибка загрузки каталога:", err));
-
-    // ========================== ОФЕРТЫ ==========================
-    function loadOfferByType(type) {
-        if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
-        const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
-        return fetch(fileName).then(r => { if(!r.ok) throw new Error(); return r.text(); }).then(html => { cachedOffers[type] = html; return html; })
-        .catch(() => { const fallback = `<div style="padding:20px;">⚠️ Текст оферты временно недоступен</div>`; cachedOffers[type] = fallback; return fallback; });
-    }
-    function showOfferModal(offerType) {
-        const modal = document.getElementById('offerModal'), body = document.getElementById('modalOfferBody');
-        if(!modal) return;
-        body.innerHTML = '<div style="text-align:center;">⏳ Загрузка...</div>';
-        modal.style.display = 'flex';
-        loadOfferByType(offerType).then(html => { body.innerHTML = html; });
-    }
-    function closeOfferModal() { const modal = document.getElementById('offerModal'); if(modal) modal.style.display = 'none'; }
-    document.querySelectorAll('.offer-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(link.dataset.offerType); }));
-    document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
-    window.onclick = (event) => { if(event.target === document.getElementById('offerModal')) closeOfferModal(); };
-
-    // ========================== ПОКУПКА ==========================
-    function getSelectedPaymentMethod() {
-        const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
-        if (activeTabId === 'tab2') return document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value || 'stars';
-        if (activeTabId === 'tab3') return document.querySelector('#content3 input[name="payment_method_mba"]:checked')?.value || 'stars';
-        return 'stars';
-    }
-    function updateMainButton() {
-        if (!tg) return;
-        const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
-        if (!selectedProduct) { tg.MainButton.hide(); return; }
-        const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
-        if (activeTabId === productTab) {
-            let isOfferAccepted = (selectedProduct.type === 'card') ? (document.getElementById('agree-offer-card')?.checked || false) : (document.getElementById('agree-offer-mba')?.checked || false);
-            if (isOfferAccepted) { tg.MainButton.setParams({ is_visible: true, text: "Купить" }); tg.MainButton.show(); }
-            else tg.MainButton.hide();
-        } else tg.MainButton.hide();
-    }
-    function updateSelectedProgram() {
-        const select = document.getElementById('card_programs');
-        const idx = select.selectedIndex;
-        if (idx > 0) { const item = c_programs[idx-1]; document.getElementById('selected_program').innerHTML = item.description; selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price,10) }; }
-        else { document.getElementById('selected_program').innerHTML = 'Ничего не выбрано'; if(selectedProduct?.type==='card') selectedProduct=null; }
-        updateMainButton();
-    }
-    function updateSelectedCource() {
-        const select = document.getElementById('Y_cources');
-        const idx = select.selectedIndex;
-        if (idx > 0) { const item = y_cources[idx-1]; document.getElementById('selected_cource').innerHTML = item.description; selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price,10) }; }
-        else { document.getElementById('selected_cource').innerHTML = 'Ничего не выбрано'; if(selectedProduct?.type==='mba') selectedProduct=null; }
-        updateMainButton();
-    }
-    document.getElementById('card_programs')?.addEventListener('change', updateSelectedProgram);
-    document.getElementById('Y_cources')?.addEventListener('change', updateSelectedCource);
-    document.getElementById('agree-offer-card')?.addEventListener('change', updateMainButton);
-    document.getElementById('agree-offer-mba')?.addEventListener('change', updateMainButton);
-    document.querySelectorAll('input[name="tabs"]').forEach(tab => tab.addEventListener('change', updateMainButton));
-    if(tg) {
-        tg.MainButton.onClick(() => {
-            if(!selectedProduct) { tg.showAlert("Выберите продукт"); return; }
-            let isAccepted = (selectedProduct.type === 'card') ? document.getElementById('agree-offer-card')?.checked : document.getElementById('agree-offer-mba')?.checked;
-            if(!isAccepted) { tg.showAlert("Подтвердите оферту"); return; }
-            tg.sendData(JSON.stringify({ type: selectedProduct.type, level: selectedProduct.level, price: selectedProduct.price, payment_method: getSelectedPaymentMethod() }));
-            clearSelectedProduct();
-            tg.showAlert("✅ Запрос отправлен");
-        });
-    }
-    function clearSelectedProduct() { selectedProduct = null; document.getElementById('card_programs').selectedIndex=0; document.getElementById('Y_cources').selectedIndex=0; document.getElementById('selected_program').innerHTML='Ничего не выбрано'; document.getElementById('selected_cource').innerHTML='Ничего не выбрано'; updateMainButton(); }
-
-    // ========================== SOLANA WALLET ==========================
-
-    function saveMnemonic(mnemonic) {
-        localStorage.setItem('solana_mnemonic', mnemonic);
-    }
-    function loadMnemonic() {
-        return localStorage.getItem('solana_mnemonic');
-    }
-    function clearSavedWallet() {
-        localStorage.removeItem('solana_mnemonic');
-    }
-
-    function createWalletFromMnemonic(mnemonic) {
-        try {
-            const seed = bip39Lib.mnemonicToSeedSync(mnemonic);
-            const keypair = solana.Keypair.fromSeed(seed.slice(0, 32));
-            return keypair;
-        } catch (e) {
-            console.error('Ошибка создания кошелька:', e);
-            return null;
-        }
-    }
-
-    function generateNewMnemonic() {
-        return bip39Lib.generateMnemonic(128);
-    }
-
-    function isValidMnemonic(mnemonic) {
-        return bip39Lib.validateMnemonic(mnemonic);
-    }
-
-    function setWallet(keypair) {
-        solanaKeypair = keypair;
-        solanaPublicKey = keypair.publicKey;
-        walletAddress = solanaPublicKey.toBase58();
-        walletConnected = true;
-
-        walletAddressDisplay.textContent = walletAddress;
-        solanaConnectPlace.innerHTML = `
-            <span class="wallet-address">${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}</span>
-            <button id="disconnectWalletBtn" class="connect-btn disconnect-btn" style="margin-left: 10px;">Отключить</button>
-        `;
-        document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
-
-        walletStatusMsg.innerHTML = `✅ Кошелёк подключён: ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}`;
-        updateQRCode();
-        fetchBalance();
-        walletSetupModal.style.display = 'none';
-    }
-
-    function disconnectWallet() {
-        solanaKeypair = null;
-        solanaPublicKey = null;
-        walletConnected = false;
-        walletAddress = '';
-        clearSavedWallet();
-
-        walletAddressDisplay.textContent = 'не подключён';
-        solanaConnectPlace.innerHTML = '';
-        solBalanceEl.innerHTML = '0.00 <span>SOL</span>';
-        ydBalanceEl.innerHTML = '0.00 <span>Y-D</span>';
-        walletStatusMsg.innerHTML = '🔌 Кошелёк отключён.';
-        updateQRCode();
-
-        // Показываем модалку настройки
-        step1.style.display = 'block';
-        step2create.style.display = 'none';
-        step2import.style.display = 'none';
-        importError.style.display = 'none';
-        walletSetupModal.style.display = 'flex';
-    }
-
-    async function fetchBalance() {
-        if (!walletConnected || !solanaPublicKey) {
-            walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
-            return;
-        }
-        try {
-            const connection = new solana.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-            const balance = await connection.getBalance(solanaPublicKey);
-            const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
-            solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
-            walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
-        } catch (err) {
-            console.error('Ошибка получения баланса:', err);
-            solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
-            walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}`;
-        }
-        ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
-    }
-
-    function initWallet() {
-        const savedMnemonic = loadMnemonic();
-        if (savedMnemonic && isValidMnemonic(savedMnemonic)) {
-            const keypair = createWalletFromMnemonic(savedMnemonic);
-            if (keypair) {
-                setWallet(keypair);
+        function tryLoad() {
+            if (index >= sources.length) {
+                alert('Не удалось загрузить библиотеку bip39. Проверьте интернет-соединение.');
                 return;
             }
+            const script = document.createElement('script');
+            script.src = sources[index];
+            script.onload = () => {
+                if (window.bip39) {
+                    callback();
+                } else {
+                    index++;
+                    tryLoad();
+                }
+            };
+            script.onerror = () => {
+                index++;
+                tryLoad();
+            };
+            document.head.appendChild(script);
         }
-        walletSetupModal.style.display = 'flex';
-        updateQRCode();
+        tryLoad();
     }
 
-    // ========================== ОБРАБОТЧИКИ МОДАЛКИ ==========================
-    document.getElementById('btnCreateWallet').addEventListener('click', () => {
-        const mnemonic = generateNewMnemonic();
-        mnemonicDisplay.textContent = mnemonic;
-        step1.style.display = 'none';
-        step2create.style.display = 'block';
-        step2import.style.display = 'none';
-    });
+    // ========================================================================
+    //  2. ОСНОВНОЙ КОД ЗАПУСКАЕТСЯ ПОСЛЕ ЗАГРУЗКИ bip39
+    // ========================================================================
+    loadBip39(() => {
+        // Теперь bip39 доступен как window.bip39
+        const bip39Lib = window.bip39;
 
-    document.getElementById('btnImportWallet').addEventListener('click', () => {
-        step1.style.display = 'none';
-        step2create.style.display = 'none';
-        step2import.style.display = 'block';
-        importError.style.display = 'none';
-    });
+        // ---------- Остальные переменные и функции ----------
+        let c_programs = [];
+        let y_cources = [];
+        let selectedProduct = null;
+        let tgUser = null;
+        let tg = null;
+        let cachedOffers = { card: null, mba: null };
 
-    document.getElementById('btnBackFromCreate').addEventListener('click', () => {
-        step2create.style.display = 'none';
-        step1.style.display = 'block';
-    });
+        let solanaKeypair = null;
+        let solanaPublicKey = null;
+        let walletConnected = false;
+        let walletAddress = '';
 
-    document.getElementById('btnBackFromImport').addEventListener('click', () => {
-        step2import.style.display = 'none';
-        step1.style.display = 'block';
-        importError.style.display = 'none';
-    });
+        const walletSetupModal = document.getElementById('walletSetupModal');
+        const step1 = document.getElementById('step1');
+        const step2create = document.getElementById('step2create');
+        const step2import = document.getElementById('step2import');
+        const mnemonicDisplay = document.getElementById('mnemonicDisplay');
+        const importSeedInput = document.getElementById('importSeedInput');
+        const importError = document.getElementById('importError');
+        const qrPlace = document.getElementById('qr-place');
+        const walletAddressDisplay = document.getElementById('wallet-address-display');
+        const solanaConnectPlace = document.getElementById('solana-connect-place');
+        const solBalanceEl = document.getElementById('sol-balance');
+        const ydBalanceEl = document.getElementById('yd-balance');
+        const walletStatusMsg = document.getElementById('walletStatusMsg');
+        const refreshBalanceBtn = document.getElementById('refreshBalanceBtn');
+        const disconnectBtnMain = document.getElementById('disconnectWalletBtnMain');
 
-    document.getElementById('btnConfirmCreate').addEventListener('click', () => {
-        const mnemonic = mnemonicDisplay.textContent.trim();
-        if (!mnemonic) return;
-        const keypair = createWalletFromMnemonic(mnemonic);
-        if (keypair) {
-            saveMnemonic(mnemonic);
-            setWallet(keypair);
+        // ---------- TELEGRAM ----------
+        if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+        }
+
+        function getTelegramUser() {
+            if (!tg) return null;
+            if (tg.initDataUnsafe?.user) return tg.initDataUnsafe.user;
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
+            if (userId) return { id: parseInt(userId,10), first_name: decodeURIComponent(urlParams.get('first_name') || ''), username: decodeURIComponent(urlParams.get('username') || '') };
+            return null;
+        }
+
+        tgUser = getTelegramUser();
+        const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
+
+        if (tgUser) {
+            document.getElementById('user-id').innerHTML = tgUser.id.toString();
+            document.getElementById('user-name').innerHTML = tgUser.first_name || 'Пользователь';
+            document.getElementById('user-username').innerHTML = tgUser.username ? '@' + tgUser.username : '—';
         } else {
-            alert('Ошибка создания кошелька. Попробуйте ещё раз.');
+            document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
         }
-    });
 
-    document.getElementById('btnConfirmImport').addEventListener('click', () => {
-        const seed = importSeedInput.value.trim();
-        if (!seed) {
-            importError.textContent = 'Введите seed-фразу.';
-            importError.style.display = 'block';
-            return;
+        // ---------- QR ----------
+        function displayQRCode(container, text, size = 180, color = '#000000', margin = 2) {
+            const target = typeof container === 'string' ? document.querySelector(container) : container;
+            if (!target) return;
+            target.innerHTML = '';
+            if (!text) {
+                target.innerHTML = '<p style="color: #888; text-align: center;">Кошелёк не подключён</p>';
+                return;
+            }
+            const canvas = document.createElement('canvas');
+            target.appendChild(canvas);
+            QRCode.toCanvas(canvas, text, { width: size, margin, color: { dark: color, light: '#ffffff' } }, (error) => {
+                if (error) target.innerHTML = '<p style="color:red;">Ошибка QR</p>';
+            });
         }
-        if (!isValidMnemonic(seed)) {
-            importError.textContent = 'Неверная seed-фраза. Проверьте правильность ввода.';
-            importError.style.display = 'block';
-            return;
+
+        function updateQRCode() {
+            if (walletConnected && walletAddress) {
+                displayQRCode(qrPlace, walletAddress, 180, tgButtonColor);
+            } else {
+                displayQRCode(qrPlace, null);
+            }
         }
-        const keypair = createWalletFromMnemonic(seed);
-        if (keypair) {
-            saveMnemonic(seed);
-            setWallet(keypair);
-        } else {
-            importError.textContent = 'Ошибка импорта. Попробуйте другую фразу.';
-            importError.style.display = 'block';
+
+        // ---------- Каталог ----------
+        fetch('content.json').then(r => r.json()).then(data => {
+            c_programs = data[5].product;
+            const s1 = document.getElementById('card_programs');
+            c_programs.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s1.appendChild(opt); });
+            y_cources = data[6];
+            const s2 = document.getElementById('Y_cources');
+            y_cources.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
+        }).catch(err => console.error("Ошибка загрузки каталога:", err));
+
+        // ---------- Оферты ----------
+        function loadOfferByType(type) {
+            if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
+            const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
+            return fetch(fileName).then(r => { if(!r.ok) throw new Error(); return r.text(); }).then(html => { cachedOffers[type] = html; return html; })
+            .catch(() => { const fallback = `<div style="padding:20px;">⚠️ Текст оферты временно недоступен</div>`; cachedOffers[type] = fallback; return fallback; });
         }
-    });
+        function showOfferModal(offerType) {
+            const modal = document.getElementById('offerModal'), body = document.getElementById('modalOfferBody');
+            if(!modal) return;
+            body.innerHTML = '<div style="text-align:center;">⏳ Загрузка...</div>';
+            modal.style.display = 'flex';
+            loadOfferByType(offerType).then(html => { body.innerHTML = html; });
+        }
+        function closeOfferModal() { const modal = document.getElementById('offerModal'); if(modal) modal.style.display = 'none'; }
+        document.querySelectorAll('.offer-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(link.dataset.offerType); }));
+        document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
+        window.onclick = (event) => { if(event.target === document.getElementById('offerModal')) closeOfferModal(); };
 
-    refreshBalanceBtn.addEventListener('click', () => {
-        if (walletConnected) fetchBalance();
-        else walletStatusMsg.innerHTML = 'Подключите кошелёк для обновления баланса.';
-    });
+        // ---------- Покупка ----------
+        function getSelectedPaymentMethod() {
+            const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
+            if (activeTabId === 'tab2') return document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value || 'stars';
+            if (activeTabId === 'tab3') return document.querySelector('#content3 input[name="payment_method_mba"]:checked')?.value || 'stars';
+            return 'stars';
+        }
+        function updateMainButton() {
+            if (!tg) return;
+            const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
+            if (!selectedProduct) { tg.MainButton.hide(); return; }
+            const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
+            if (activeTabId === productTab) {
+                let isOfferAccepted = (selectedProduct.type === 'card') ? (document.getElementById('agree-offer-card')?.checked || false) : (document.getElementById('agree-offer-mba')?.checked || false);
+                if (isOfferAccepted) { tg.MainButton.setParams({ is_visible: true, text: "Купить" }); tg.MainButton.show(); }
+                else tg.MainButton.hide();
+            } else tg.MainButton.hide();
+        }
+        function updateSelectedProgram() {
+            const select = document.getElementById('card_programs');
+            const idx = select.selectedIndex;
+            if (idx > 0) { const item = c_programs[idx-1]; document.getElementById('selected_program').innerHTML = item.description; selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price,10) }; }
+            else { document.getElementById('selected_program').innerHTML = 'Ничего не выбрано'; if(selectedProduct?.type==='card') selectedProduct=null; }
+            updateMainButton();
+        }
+        function updateSelectedCource() {
+            const select = document.getElementById('Y_cources');
+            const idx = select.selectedIndex;
+            if (idx > 0) { const item = y_cources[idx-1]; document.getElementById('selected_cource').innerHTML = item.description; selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price,10) }; }
+            else { document.getElementById('selected_cource').innerHTML = 'Ничего не выбрано'; if(selectedProduct?.type==='mba') selectedProduct=null; }
+            updateMainButton();
+        }
+        document.getElementById('card_programs')?.addEventListener('change', updateSelectedProgram);
+        document.getElementById('Y_cources')?.addEventListener('change', updateSelectedCource);
+        document.getElementById('agree-offer-card')?.addEventListener('change', updateMainButton);
+        document.getElementById('agree-offer-mba')?.addEventListener('change', updateMainButton);
+        document.querySelectorAll('input[name="tabs"]').forEach(tab => tab.addEventListener('change', updateMainButton));
+        if(tg) {
+            tg.MainButton.onClick(() => {
+                if(!selectedProduct) { tg.showAlert("Выберите продукт"); return; }
+                let isAccepted = (selectedProduct.type === 'card') ? document.getElementById('agree-offer-card')?.checked : document.getElementById('agree-offer-mba')?.checked;
+                if(!isAccepted) { tg.showAlert("Подтвердите оферту"); return; }
+                tg.sendData(JSON.stringify({ type: selectedProduct.type, level: selectedProduct.level, price: selectedProduct.price, payment_method: getSelectedPaymentMethod() }));
+                clearSelectedProduct();
+                tg.showAlert("✅ Запрос отправлен");
+            });
+        }
+        function clearSelectedProduct() { selectedProduct = null; document.getElementById('card_programs').selectedIndex=0; document.getElementById('Y_cources').selectedIndex=0; document.getElementById('selected_program').innerHTML='Ничего не выбрано'; document.getElementById('selected_cource').innerHTML='Ничего не выбрано'; updateMainButton(); }
 
-    disconnectBtnMain.addEventListener('click', disconnectWallet);
+        // ---------- SOLANA WALLET ----------
+        function saveMnemonic(mnemonic) { localStorage.setItem('solana_mnemonic', mnemonic); }
+        function loadMnemonic() { return localStorage.getItem('solana_mnemonic'); }
+        function clearSavedWallet() { localStorage.removeItem('solana_mnemonic'); }
 
-    // ========================== ЗАПУСК ==========================
-    window.addEventListener('DOMContentLoaded', () => {
+        function createWalletFromMnemonic(mnemonic) {
+            try {
+                const seed = bip39Lib.mnemonicToSeedSync(mnemonic);
+                const keypair = solana.Keypair.fromSeed(seed.slice(0, 32));
+                return keypair;
+            } catch (e) {
+                console.error('Ошибка создания кошелька:', e);
+                return null;
+            }
+        }
+
+        function generateNewMnemonic() {
+            return bip39Lib.generateMnemonic(128);
+        }
+
+        function isValidMnemonic(mnemonic) {
+            return bip39Lib.validateMnemonic(mnemonic);
+        }
+
+        function setWallet(keypair) {
+            solanaKeypair = keypair;
+            solanaPublicKey = keypair.publicKey;
+            walletAddress = solanaPublicKey.toBase58();
+            walletConnected = true;
+
+            walletAddressDisplay.textContent = walletAddress;
+            solanaConnectPlace.innerHTML = `
+                <span class="wallet-address">${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}</span>
+                <button id="disconnectWalletBtn" class="connect-btn disconnect-btn" style="margin-left: 10px;">Отключить</button>
+            `;
+            document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
+
+            walletStatusMsg.innerHTML = `✅ Кошелёк подключён: ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}`;
+            updateQRCode();
+            fetchBalance();
+            walletSetupModal.style.display = 'none';
+        }
+
+        function disconnectWallet() {
+            solanaKeypair = null;
+            solanaPublicKey = null;
+            walletConnected = false;
+            walletAddress = '';
+            clearSavedWallet();
+
+            walletAddressDisplay.textContent = 'не подключён';
+            solanaConnectPlace.innerHTML = '';
+            solBalanceEl.innerHTML = '0.00 <span>SOL</span>';
+            ydBalanceEl.innerHTML = '0.00 <span>Y-D</span>';
+            walletStatusMsg.innerHTML = '🔌 Кошелёк отключён.';
+            updateQRCode();
+
+            step1.style.display = 'block';
+            step2create.style.display = 'none';
+            step2import.style.display = 'none';
+            importError.style.display = 'none';
+            walletSetupModal.style.display = 'flex';
+        }
+
+        async function fetchBalance() {
+            if (!walletConnected || !solanaPublicKey) {
+                walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
+                return;
+            }
+            try {
+                const connection = new solana.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+                const balance = await connection.getBalance(solanaPublicKey);
+                const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
+                solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
+                walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
+            } catch (err) {
+                console.error('Ошибка получения баланса:', err);
+                solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
+                walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}`;
+            }
+            ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
+        }
+
+        function initWallet() {
+            const savedMnemonic = loadMnemonic();
+            if (savedMnemonic && isValidMnemonic(savedMnemonic)) {
+                const keypair = createWalletFromMnemonic(savedMnemonic);
+                if (keypair) {
+                    setWallet(keypair);
+                    return;
+                }
+            }
+            walletSetupModal.style.display = 'flex';
+            updateQRCode();
+        }
+
+        // ---------- Обработчики модалки ----------
+        document.getElementById('btnCreateWallet').addEventListener('click', () => {
+            const mnemonic = generateNewMnemonic();
+            mnemonicDisplay.textContent = mnemonic;
+            step1.style.display = 'none';
+            step2create.style.display = 'block';
+            step2import.style.display = 'none';
+        });
+
+        document.getElementById('btnImportWallet').addEventListener('click', () => {
+            step1.style.display = 'none';
+            step2create.style.display = 'none';
+            step2import.style.display = 'block';
+            importError.style.display = 'none';
+        });
+
+        document.getElementById('btnBackFromCreate').addEventListener('click', () => {
+            step2create.style.display = 'none';
+            step1.style.display = 'block';
+        });
+
+        document.getElementById('btnBackFromImport').addEventListener('click', () => {
+            step2import.style.display = 'none';
+            step1.style.display = 'block';
+            importError.style.display = 'none';
+        });
+
+        document.getElementById('btnConfirmCreate').addEventListener('click', () => {
+            const mnemonic = mnemonicDisplay.textContent.trim();
+            if (!mnemonic) return;
+            const keypair = createWalletFromMnemonic(mnemonic);
+            if (keypair) {
+                saveMnemonic(mnemonic);
+                setWallet(keypair);
+            } else {
+                alert('Ошибка создания кошелька. Попробуйте ещё раз.');
+            }
+        });
+
+        document.getElementById('btnConfirmImport').addEventListener('click', () => {
+            const seed = importSeedInput.value.trim();
+            if (!seed) {
+                importError.textContent = 'Введите seed-фразу.';
+                importError.style.display = 'block';
+                return;
+            }
+            if (!isValidMnemonic(seed)) {
+                importError.textContent = 'Неверная seed-фраза. Проверьте правильность ввода.';
+                importError.style.display = 'block';
+                return;
+            }
+            const keypair = createWalletFromMnemonic(seed);
+            if (keypair) {
+                saveMnemonic(seed);
+                setWallet(keypair);
+            } else {
+                importError.textContent = 'Ошибка импорта. Попробуйте другую фразу.';
+                importError.style.display = 'block';
+            }
+        });
+
+        refreshBalanceBtn.addEventListener('click', () => {
+            if (walletConnected) fetchBalance();
+            else walletStatusMsg.innerHTML = 'Подключите кошелёк для обновления баланса.';
+        });
+
+        disconnectBtnMain.addEventListener('click', disconnectWallet);
+
+        // ---------- ЗАПУСК ----------
         initWallet();
     });
 </script>
