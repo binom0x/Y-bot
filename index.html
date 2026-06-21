@@ -1002,25 +1002,39 @@
                 return;
             }
 
+            // RPC, которые в настоящее время работают без ключа (проверено)
             const rpcEndpoints = [
                 'https://api.mainnet-beta.solana.com',
                 'https://solana-api.projectserum.com',
-                'https://rpc.helium.io',
                 'https://rpc.ankr.com/solana'
             ];
 
             let lastError = null;
             for (const endpoint of rpcEndpoints) {
                 try {
+                    // Добавляем таймаут для каждого запроса (через AbortController)
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+
                     const connection = new solana.Connection(endpoint, {
                         commitment: 'confirmed',
                         httpHeaders: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
                             'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
+                        },
+                        fetch: (url, options) => {
+                            // Передаём сигнал для прерывания
+                            return fetch(url, {
+                                ...options,
+                                signal: controller.signal
+                            });
                         }
                     });
+
                     const balance = await connection.getBalance(solanaKeypair.publicKey);
+                    clearTimeout(timeoutId); // очищаем таймаут
+
                     const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
                     solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
                     userSolBalance.textContent = solBalance;
@@ -1030,6 +1044,7 @@
                 } catch (err) {
                     console.warn(`RPC ${endpoint} не ответил:`, err.message);
                     lastError = err;
+                    // продолжаем со следующим
                 }
             }
 
@@ -1126,16 +1141,21 @@
         initWallet();
     };
 
-    // Если библиотека уже загружена, запускаем сразу
+    // ========================================================================
+    //  ЗАПУСК ПРИЛОЖЕНИЯ (с защитой от двойного вызова)
+    // ========================================================================
     if (typeof solana !== 'undefined' && window.startApp) {
         window.startApp();
     } else {
         const checkInterval = setInterval(() => {
-            if (typeof solana !== 'undefined' && window.startApp) {
+            // Проверяем, что приложение ещё не запущено и библиотека загружена
+            if (typeof solana !== 'undefined' && window.startApp && !appStarted) {
                 window.startApp();
                 clearInterval(checkInterval);
             }
         }, 100);
+
+        // Таймаут, чтобы очистить интервал, если библиотека не загрузилась
         setTimeout(() => {
             clearInterval(checkInterval);
             const msg = document.getElementById('walletStatusMsg');
