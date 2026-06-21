@@ -9,9 +9,10 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- QR-код -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <!-- Solana Web3 и bip39 -->
+    <!-- Solana Web3 -->
     <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bip39@3.1.0/bip39.min.js"></script>
+    <!-- bip39 – используем надёжный CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bip39/3.0.2/bip39.min.js"></script>
 </head>
 <body>
 
@@ -37,9 +38,8 @@
                 <p><strong>Адрес кошелька:</strong> <span id="wallet-address-display">не подключён</span></p>
             </div>
             <div id="qr-place">
-                <!-- Здесь будет QR-код с адресом кошелька или сообщение -->
+                <!-- QR-код с адресом кошелька -->
             </div>
-            <!-- !!! НОВАЯ КНОПКА ОТКЛЮЧЕНИЯ КОШЕЛЬКА -->
             <div style="margin-top: 20px; text-align: center;">
                 <button id="disconnectWalletBtnMain" class="connect-btn disconnect-btn" style="width: 100%;">
                     🔌 Отключить кошелёк
@@ -88,9 +88,7 @@
                         <i class="fa fa-connectdevelop" aria-hidden="true"></i>
                         <span>Solana Wallet</span>
                     </div>
-                    <div id="solana-connect-place">
-                        <!-- Адрес или кнопка -->
-                    </div>
+                    <div id="solana-connect-place"></div>
                 </div>
                 <div class="balance-grid">
                     <div class="balance-item">
@@ -133,7 +131,7 @@
             <span class="close-modal" id="closeSetupModal" style="display: none;">&times;</span>
         </div>
         <div class="modal-body" id="setupModalBody">
-            <!-- Шаг 1: выбор действия -->
+            <!-- Шаг 1 -->
             <div id="step1">
                 <p>Для работы с приложением необходим кошелёк Solana.</p>
                 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
@@ -141,10 +139,10 @@
                     <button id="btnImportWallet" class="connect-btn" style="width:100%; background: #6c819a;">🔑 Импортировать существующий</button>
                 </div>
             </div>
-            <!-- Шаг 2a: создание нового -->
+            <!-- Шаг 2a: создание -->
             <div id="step2create" style="display: none;">
                 <p><strong>Ваша мнемоническая фраза (12 слов):</strong></p>
-                <div style="background: #f0f4f8; padding: 16px; border-radius: 16px; font-family: monospace; font-size: 16px; word-break: break-word; margin: 12px 0;" id="mnemonicDisplay"></div>
+                <div id="mnemonicDisplay" style="background: #f0f4f8; padding: 16px; border-radius: 16px; font-family: monospace; font-size: 16px; word-break: break-word; margin: 12px 0;"></div>
                 <p style="font-size: 14px; color: #d32f2f;">⚠️ Сохраните эту фразу в надёжном месте! Без неё вы не сможете восстановить доступ к кошельку.</p>
                 <div style="display: flex; gap: 12px; margin-top: 16px;">
                     <button id="btnConfirmCreate" class="connect-btn" style="flex:1;">✅ Я сохранил(а), создать</button>
@@ -165,7 +163,7 @@
     </div>
 </div>
 
-<!-- Модалка оферты (без изменений) -->
+<!-- Модалка оферты -->
 <div id="offerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -208,7 +206,13 @@
     const refreshBalanceBtn = document.getElementById('refreshBalanceBtn');
     const disconnectBtnMain = document.getElementById('disconnectWalletBtnMain');
 
-    // ========================== РАБОТА С TELEGRAM (опционально) ==========================
+    // ---------- Проверка наличия bip39 ----------
+    const bip39Lib = window.bip39 || (typeof bip39 !== 'undefined' ? bip39 : null);
+    if (!bip39Lib) {
+        alert('Ошибка: библиотека bip39 не загружена. Попробуйте обновить страницу.');
+    }
+
+    // ========================== TELEGRAM (опционально) ==========================
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
@@ -235,7 +239,7 @@
         document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
     }
 
-    // ========================== QR-КОД (теперь привязан к адресу кошелька) ==========================
+    // ========================== QR-КОД ==========================
     function displayQRCode(container, text, size = 180, color = '#000000', margin = 2) {
         const target = typeof container === 'string' ? document.querySelector(container) : container;
         if (!target) return;
@@ -251,12 +255,11 @@
         });
     }
 
-    // !!! Обновление QR-кода на основе текущего состояния кошелька
     function updateQRCode() {
         if (walletConnected && walletAddress) {
             displayQRCode(qrPlace, walletAddress, 180, tgButtonColor);
         } else {
-            displayQRCode(qrPlace, null); // покажет "Кошелёк не подключён"
+            displayQRCode(qrPlace, null);
         }
     }
 
@@ -270,7 +273,7 @@
         y_cources.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
     }).catch(err => console.error("Ошибка загрузки каталога:", err));
 
-    // ========================== ОФЕРТЫ (без изменений) ==========================
+    // ========================== ОФЕРТЫ ==========================
     function loadOfferByType(type) {
         if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
         const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
@@ -289,7 +292,7 @@
     document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
     window.onclick = (event) => { if(event.target === document.getElementById('offerModal')) closeOfferModal(); };
 
-    // ========================== ПОКУПКА (без изменений) ==========================
+    // ========================== ПОКУПКА ==========================
     function getSelectedPaymentMethod() {
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
         if (activeTabId === 'tab2') return document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value || 'stars';
@@ -352,7 +355,7 @@
 
     function createWalletFromMnemonic(mnemonic) {
         try {
-            const seed = bip39.mnemonicToSeedSync(mnemonic);
+            const seed = bip39Lib.mnemonicToSeedSync(mnemonic);
             const keypair = solana.Keypair.fromSeed(seed.slice(0, 32));
             return keypair;
         } catch (e) {
@@ -362,64 +365,47 @@
     }
 
     function generateNewMnemonic() {
-        return bip39.generateMnemonic(128);
+        return bip39Lib.generateMnemonic(128);
     }
 
     function isValidMnemonic(mnemonic) {
-        return bip39.validateMnemonic(mnemonic);
+        return bip39Lib.validateMnemonic(mnemonic);
     }
 
-    // !!! Установка кошелька
     function setWallet(keypair) {
         solanaKeypair = keypair;
         solanaPublicKey = keypair.publicKey;
         walletAddress = solanaPublicKey.toBase58();
         walletConnected = true;
 
-        // Обновляем отображение адреса в личной информации
         walletAddressDisplay.textContent = walletAddress;
-
-        // Обновляем виджет в шапке баланса
         solanaConnectPlace.innerHTML = `
             <span class="wallet-address">${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}</span>
             <button id="disconnectWalletBtn" class="connect-btn disconnect-btn" style="margin-left: 10px;">Отключить</button>
         `;
         document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
 
-        // Обновляем статус
         walletStatusMsg.innerHTML = `✅ Кошелёк подключён: ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}`;
-
-        // Генерируем QR-код с адресом
         updateQRCode();
-
-        // Получаем баланс
         fetchBalance();
-
-        // Скрываем модалку
         walletSetupModal.style.display = 'none';
     }
 
-    // !!! ОТКЛЮЧЕНИЕ КОШЕЛЬКА (полный сброс)
     function disconnectWallet() {
-        // Сбрасываем состояние
         solanaKeypair = null;
         solanaPublicKey = null;
         walletConnected = false;
         walletAddress = '';
         clearSavedWallet();
 
-        // Обновляем интерфейс
         walletAddressDisplay.textContent = 'не подключён';
         solanaConnectPlace.innerHTML = '';
         solBalanceEl.innerHTML = '0.00 <span>SOL</span>';
         ydBalanceEl.innerHTML = '0.00 <span>Y-D</span>';
         walletStatusMsg.innerHTML = '🔌 Кошелёк отключён.';
-
-        // Обновляем QR-код (показывает "не подключён")
         updateQRCode();
 
-        // Показываем модальное окно настройки (как при первом запуске)
-        // Сбрасываем шаги к начальному
+        // Показываем модалку настройки
         step1.style.display = 'block';
         step2create.style.display = 'none';
         step2import.style.display = 'none';
@@ -427,7 +413,6 @@
         walletSetupModal.style.display = 'flex';
     }
 
-    // Получение баланса SOL
     async function fetchBalance() {
         if (!walletConnected || !solanaPublicKey) {
             walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
@@ -444,11 +429,9 @@
             solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
             walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}`;
         }
-        // Y-D пока заглушка
         ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
     }
 
-    // !!! Инициализация: проверяем сохранённый кошелёк
     function initWallet() {
         const savedMnemonic = loadMnemonic();
         if (savedMnemonic && isValidMnemonic(savedMnemonic)) {
@@ -458,12 +441,11 @@
                 return;
             }
         }
-        // Нет кошелька – показываем модалку и QR-заглушку
         walletSetupModal.style.display = 'flex';
-        updateQRCode(); // покажет "не подключён"
+        updateQRCode();
     }
 
-    // ========================== ОБРАБОТЧИКИ МОДАЛЬНОГО ОКНА ==========================
+    // ========================== ОБРАБОТЧИКИ МОДАЛКИ ==========================
     document.getElementById('btnCreateWallet').addEventListener('click', () => {
         const mnemonic = generateNewMnemonic();
         mnemonicDisplay.textContent = mnemonic;
@@ -524,13 +506,11 @@
         }
     });
 
-    // Кнопка обновления баланса
     refreshBalanceBtn.addEventListener('click', () => {
         if (walletConnected) fetchBalance();
         else walletStatusMsg.innerHTML = 'Подключите кошелёк для обновления баланса.';
     });
 
-    // !!! Кнопка "Отключить кошелёк" на вкладке "Ваши данные"
     disconnectBtnMain.addEventListener('click', disconnectWallet);
 
     // ========================== ЗАПУСК ==========================
