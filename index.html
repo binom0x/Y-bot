@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
     <link rel="stylesheet" href="miniapp.css" type="text/css" media="all" />
     <title>Y - Ваш ключ от будущего!</title>
-    <!-- Telegram WebApp (опционально) -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- QR-код -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <!-- Solana Web3 -->
@@ -15,7 +13,7 @@
 <body>
 
 <main>
-    <!-- Вкладки (без изменений) -->
+    <!-- Вкладки -->
     <input id="tab1" type="radio" name="tabs" checked />
     <label for="tab1">Ваши данные</label>
     <input id="tab2" type="radio" name="tabs" />
@@ -25,15 +23,14 @@
     <input id="tab4" type="radio" name="tabs" />
     <label for="tab4">Баланс</label>
 
-    <!-- Секции (без изменений) -->
+    <!-- Секции -->
     <section id="content1">
         <div class="dashboard">
             <div class="user-info">
                 <h2>👤 Личная информация</h2>
-                <p><strong>ID:</strong> <span id="user-id">—</span></p>
-                <p><strong>Имя:</strong> <span id="user-name">—</span></p>
-                <p><strong>Username:</strong> <span id="user-username">—</span></p>
+                <!-- Вместо Telegram-данных показываем адрес кошелька -->
                 <p><strong>Адрес кошелька:</strong> <span id="wallet-address-display">не подключён</span></p>
+                <p><strong>Баланс SOL:</strong> <span id="user-sol-balance">0.00</span></p>
             </div>
             <div id="qr-place"></div>
             <div style="margin-top: 20px; text-align: center;">
@@ -48,14 +45,14 @@
         <p id="selected_program"></p>
         <div class="payment-method-block">
             <h3>Способ оплаты</h3>
-            <label><input type="radio" name="payment_method_card" value="stars" checked> ⭐ Telegram Stars</label>
-            <label><input type="radio" name="payment_method_card" value="card"> 💳 Банковская карта</label>
-            <label><input type="radio" name="payment_method_card" value="yoomoney"> 💰 YooMoney</label>
+            <!-- Оставляем только криптовалюту, но можно добавить другие -->
+            <label><input type="radio" name="payment_method_card" value="crypto" checked> 💰 Криптовалюта (SOL)</label>
         </div>
         <div class="offer-agreement">
             <input type="checkbox" id="agree-offer-card" />
             <label for="agree-offer-card">Я ознакомлен(а) и согласен(сна) с условиями <a href="javascript:void(0)" data-offer-type="card" class="offer-link">Публичной оферты (Y‑Карта)</a></label>
         </div>
+        <button id="buyCardBtn" class="connect-btn" style="width:100%; margin-top: 20px;">Купить</button>
     </section>
 
     <section id="content3">
@@ -64,14 +61,13 @@
         <p id="selected_cource"></p>
         <div class="payment-method-block">
             <h3>Способ оплаты</h3>
-            <label><input type="radio" name="payment_method_mba" value="stars" checked> ⭐ Telegram Stars</label>
-            <label><input type="radio" name="payment_method_mba" value="card"> 💳 Банковская карта</label>
-            <label><input type="radio" name="payment_method_mba" value="yoomoney"> 💰 YooMoney</label>
+            <label><input type="radio" name="payment_method_mba" value="crypto" checked> 💰 Криптовалюта (SOL)</label>
         </div>
         <div class="offer-agreement">
             <input type="checkbox" id="agree-offer-mba" />
             <label for="agree-offer-mba">Я ознакомлен(а) и согласен(сна) с условиями <a href="javascript:void(0)" data-offer-type="mba" class="offer-link">Публичной оферты (Y‑MBA)</a></label>
         </div>
+        <button id="buyMbaBtn" class="connect-btn" style="width:100%; margin-top: 20px;">Купить</button>
     </section>
 
     <section id="content4">
@@ -130,23 +126,27 @@
                     <button id="btnImportWallet" class="connect-btn" style="width:100%; background: #6c819a;">🔑 Импортировать существующий</button>
                 </div>
             </div>
+            <!-- Шаг 2a: создание -->
             <div id="step2create" style="display: none;">
-                <p><strong>Ваша мнемоническая фраза (12 слов):</strong></p>
-                <div id="mnemonicDisplay" style="background: #f0f4f8; padding: 16px; border-radius: 16px; font-family: monospace; font-size: 16px; word-break: break-word; margin: 12px 0;"></div>
-                <p style="font-size: 14px; color: #d32f2f;">⚠️ Сохраните эту фразу в надёжном месте!</p>
+                <p><strong>Ваш новый кошелёк создан!</strong></p>
+                <p><strong>Публичный адрес:</strong><br><span id="newPublicKey" style="font-family: monospace; word-break: break-all; background: #f0f4f8; padding: 8px; border-radius: 8px; display: block;"></span></p>
+                <p><strong>Приватный ключ (сохраните в надёжном месте):</strong><br>
+                <span id="newPrivateKey" style="font-family: monospace; word-break: break-all; background: #f0f4f8; padding: 8px; border-radius: 8px; display: block; border: 1px solid #d32f2f;"></span></p>
+                <p style="font-size: 14px; color: #d32f2f;">⚠️ Этот ключ даёт полный доступ к кошельку. Никому его не показывайте!</p>
                 <div style="display: flex; gap: 12px; margin-top: 16px;">
-                    <button id="btnConfirmCreate" class="connect-btn" style="flex:1;">✅ Я сохранил(а), создать</button>
+                    <button id="btnConfirmCreate" class="connect-btn" style="flex:1;">✅ Я сохранил(а), продолжить</button>
                     <button id="btnBackFromCreate" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
                 </div>
             </div>
+            <!-- Шаг 2b: импорт -->
             <div id="step2import" style="display: none;">
-                <p>Введите вашу seed-фразу (12 или 24 слова):</p>
-                <textarea id="importSeedInput" rows="4" style="width:100%; padding: 12px; border-radius: 14px; border: 1px solid #cdd9ed; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
+                <p>Введите ваш приватный ключ (base58):</p>
+                <input id="importPrivateKey" type="text" style="width:100%; padding: 12px; border-radius: 14px; border: 1px solid #cdd9ed; font-family: monospace; font-size: 14px;" placeholder="Вставьте приватный ключ" />
                 <div style="display: flex; gap: 12px; margin-top: 16px;">
                     <button id="btnConfirmImport" class="connect-btn" style="flex:1;">🔓 Импортировать</button>
                     <button id="btnBackFromImport" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
                 </div>
-                <div id="importError" style="color:red; margin-top: 8px; display: none;">Неверная seed-фраза.</div>
+                <div id="importError" style="color:red; margin-top: 8px; display: none;">Неверный ключ.</div>
             </div>
         </div>
     </div>
@@ -165,102 +165,51 @@
 
 <script>
     // ========================================================================
-    //  1. ДИНАМИЧЕСКАЯ ЗАГРУЗКА bip39 С FALLBACK
+    //  1. КОНФИГУРАЦИЯ
     // ========================================================================
-    function loadBip39(callback) {
-        const sources = [
-            'https://cdn.jsdelivr.net/npm/bip39@3.1.0/umd/bip39.min.js',
-            'https://unpkg.com/bip39@3.1.0/umd/bip39.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/bip39/3.1.0/bip39.min.js'
-        ];
-        let index = 0;
+    const API_BASE_URL = 'http://localhost:8000'; // замените на адрес вашего FastAPI сервера
 
-        function tryLoad() {
-            if (index >= sources.length) {
-                alert('Не удалось загрузить библиотеку bip39. Проверьте интернет-соединение.');
-                return;
-            }
-            const script = document.createElement('script');
-            script.src = sources[index];
-            script.onload = () => {
-                if (window.bip39) {
-                    callback();
-                } else {
-                    index++;
-                    tryLoad();
-                }
-            };
-            script.onerror = () => {
-                index++;
-                tryLoad();
-            };
-            document.head.appendChild(script);
-        }
-        tryLoad();
+    // ========================================================================
+    //  2. ПРОВЕРКА НАЛИЧИЯ SOLANA
+    // ========================================================================
+    if (typeof solana === 'undefined') {
+        alert('Библиотека @solana/web3.js не загружена. Проверьте интернет.');
     }
 
     // ========================================================================
-    //  2. ОСНОВНОЙ КОД ЗАПУСКАЕТСЯ ПОСЛЕ ЗАГРУЗКИ bip39
+    //  3. ОСНОВНОЙ КОД
     // ========================================================================
-    loadBip39(() => {
-        // Теперь bip39 доступен как window.bip39
-        const bip39Lib = window.bip39;
-
-        // ---------- Остальные переменные и функции ----------
+    (function() {
+        // ---------- Глобальные переменные ----------
         let c_programs = [];
         let y_cources = [];
-        let selectedProduct = null;
-        let tgUser = null;
-        let tg = null;
+        let selectedProduct = null; // { type: 'card'|'mba', level, price }
         let cachedOffers = { card: null, mba: null };
 
         let solanaKeypair = null;
-        let solanaPublicKey = null;
         let walletConnected = false;
         let walletAddress = '';
 
+        // DOM-элементы
         const walletSetupModal = document.getElementById('walletSetupModal');
         const step1 = document.getElementById('step1');
         const step2create = document.getElementById('step2create');
         const step2import = document.getElementById('step2import');
-        const mnemonicDisplay = document.getElementById('mnemonicDisplay');
-        const importSeedInput = document.getElementById('importSeedInput');
+        const newPublicKey = document.getElementById('newPublicKey');
+        const newPrivateKey = document.getElementById('newPrivateKey');
+        const importPrivateKey = document.getElementById('importPrivateKey');
         const importError = document.getElementById('importError');
         const qrPlace = document.getElementById('qr-place');
         const walletAddressDisplay = document.getElementById('wallet-address-display');
+        const userSolBalance = document.getElementById('user-sol-balance');
         const solanaConnectPlace = document.getElementById('solana-connect-place');
         const solBalanceEl = document.getElementById('sol-balance');
         const ydBalanceEl = document.getElementById('yd-balance');
         const walletStatusMsg = document.getElementById('walletStatusMsg');
         const refreshBalanceBtn = document.getElementById('refreshBalanceBtn');
         const disconnectBtnMain = document.getElementById('disconnectWalletBtnMain');
-
-        // ---------- TELEGRAM ----------
-        if (window.Telegram && window.Telegram.WebApp) {
-            tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-        }
-
-        function getTelegramUser() {
-            if (!tg) return null;
-            if (tg.initDataUnsafe?.user) return tg.initDataUnsafe.user;
-            const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('user_id');
-            if (userId) return { id: parseInt(userId,10), first_name: decodeURIComponent(urlParams.get('first_name') || ''), username: decodeURIComponent(urlParams.get('username') || '') };
-            return null;
-        }
-
-        tgUser = getTelegramUser();
-        const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
-
-        if (tgUser) {
-            document.getElementById('user-id').innerHTML = tgUser.id.toString();
-            document.getElementById('user-name').innerHTML = tgUser.first_name || 'Пользователь';
-            document.getElementById('user-username').innerHTML = tgUser.username ? '@' + tgUser.username : '—';
-        } else {
-            document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
-        }
+        const buyCardBtn = document.getElementById('buyCardBtn');
+        const buyMbaBtn = document.getElementById('buyMbaBtn');
 
         // ---------- QR ----------
         function displayQRCode(container, text, size = 180, color = '#000000', margin = 2) {
@@ -280,118 +229,196 @@
 
         function updateQRCode() {
             if (walletConnected && walletAddress) {
-                displayQRCode(qrPlace, walletAddress, 180, tgButtonColor);
+                displayQRCode(qrPlace, walletAddress, 180, '#000000');
             } else {
                 displayQRCode(qrPlace, null);
             }
         }
 
-        // ---------- Каталог ----------
-        fetch('content.json').then(r => r.json()).then(data => {
-            c_programs = data[5].product;
-            const s1 = document.getElementById('card_programs');
-            c_programs.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s1.appendChild(opt); });
-            y_cources = data[6];
-            const s2 = document.getElementById('Y_cources');
-            y_cources.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
-        }).catch(err => console.error("Ошибка загрузки каталога:", err));
+        // ---------- Загрузка каталога ----------
+        fetch('content.json')
+            .then(r => r.json())
+            .then(data => {
+                c_programs = data[5]?.product || [];
+                const s1 = document.getElementById('card_programs');
+                c_programs.forEach(item => {
+                    let opt = document.createElement('option');
+                    opt.value = item.level;
+                    opt.textContent = `${item.level} (${item.price} руб.)`;
+                    s1.appendChild(opt);
+                });
+                y_cources = data[6] || [];
+                const s2 = document.getElementById('Y_cources');
+                y_cources.forEach(item => {
+                    let opt = document.createElement('option');
+                    opt.value = item.level;
+                    opt.textContent = `${item.level} (${item.price} руб.)`;
+                    s2.appendChild(opt);
+                });
+            })
+            .catch(err => console.error('Ошибка загрузки каталога:', err));
 
         // ---------- Оферты ----------
         function loadOfferByType(type) {
             if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
             const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
-            return fetch(fileName).then(r => { if(!r.ok) throw new Error(); return r.text(); }).then(html => { cachedOffers[type] = html; return html; })
-            .catch(() => { const fallback = `<div style="padding:20px;">⚠️ Текст оферты временно недоступен</div>`; cachedOffers[type] = fallback; return fallback; });
+            return fetch(fileName)
+                .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+                .then(html => { cachedOffers[type] = html; return html; })
+                .catch(() => {
+                    const fallback = `<div style="padding:20px;">⚠️ Текст оферты временно недоступен</div>`;
+                    cachedOffers[type] = fallback;
+                    return fallback;
+                });
         }
+
         function showOfferModal(offerType) {
-            const modal = document.getElementById('offerModal'), body = document.getElementById('modalOfferBody');
-            if(!modal) return;
+            const modal = document.getElementById('offerModal');
+            const body = document.getElementById('modalOfferBody');
+            if (!modal) return;
             body.innerHTML = '<div style="text-align:center;">⏳ Загрузка...</div>';
             modal.style.display = 'flex';
             loadOfferByType(offerType).then(html => { body.innerHTML = html; });
         }
-        function closeOfferModal() { const modal = document.getElementById('offerModal'); if(modal) modal.style.display = 'none'; }
-        document.querySelectorAll('.offer-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(link.dataset.offerType); }));
-        document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
-        window.onclick = (event) => { if(event.target === document.getElementById('offerModal')) closeOfferModal(); };
 
-        // ---------- Покупка ----------
-        function getSelectedPaymentMethod() {
-            const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
-            if (activeTabId === 'tab2') return document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value || 'stars';
-            if (activeTabId === 'tab3') return document.querySelector('#content3 input[name="payment_method_mba"]:checked')?.value || 'stars';
-            return 'stars';
+        function closeOfferModal() {
+            const modal = document.getElementById('offerModal');
+            if (modal) modal.style.display = 'none';
         }
-        function updateMainButton() {
-            if (!tg) return;
-            const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
-            if (!selectedProduct) { tg.MainButton.hide(); return; }
-            const productTab = selectedProduct.type === 'card' ? 'tab2' : 'tab3';
-            if (activeTabId === productTab) {
-                let isOfferAccepted = (selectedProduct.type === 'card') ? (document.getElementById('agree-offer-card')?.checked || false) : (document.getElementById('agree-offer-mba')?.checked || false);
-                if (isOfferAccepted) { tg.MainButton.setParams({ is_visible: true, text: "Купить" }); tg.MainButton.show(); }
-                else tg.MainButton.hide();
-            } else tg.MainButton.hide();
-        }
+
+        document.querySelectorAll('.offer-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showOfferModal(link.dataset.offerType);
+            });
+        });
+        document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
+        window.onclick = (event) => {
+            if (event.target === document.getElementById('offerModal')) closeOfferModal();
+        };
+
+        // ---------- Выбор продукта ----------
         function updateSelectedProgram() {
             const select = document.getElementById('card_programs');
             const idx = select.selectedIndex;
-            if (idx > 0) { const item = c_programs[idx-1]; document.getElementById('selected_program').innerHTML = item.description; selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price,10) }; }
-            else { document.getElementById('selected_program').innerHTML = 'Ничего не выбрано'; if(selectedProduct?.type==='card') selectedProduct=null; }
-            updateMainButton();
+            if (idx > 0) {
+                const item = c_programs[idx - 1];
+                document.getElementById('selected_program').innerHTML = item.description;
+                selectedProduct = { type: 'card', level: item.level, price: parseInt(item.price, 10) };
+            } else {
+                document.getElementById('selected_program').innerHTML = 'Ничего не выбрано';
+                if (selectedProduct?.type === 'card') selectedProduct = null;
+            }
         }
+
         function updateSelectedCource() {
             const select = document.getElementById('Y_cources');
             const idx = select.selectedIndex;
-            if (idx > 0) { const item = y_cources[idx-1]; document.getElementById('selected_cource').innerHTML = item.description; selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price,10) }; }
-            else { document.getElementById('selected_cource').innerHTML = 'Ничего не выбрано'; if(selectedProduct?.type==='mba') selectedProduct=null; }
-            updateMainButton();
+            if (idx > 0) {
+                const item = y_cources[idx - 1];
+                document.getElementById('selected_cource').innerHTML = item.description;
+                selectedProduct = { type: 'mba', level: item.level, price: parseInt(item.price, 10) };
+            } else {
+                document.getElementById('selected_cource').innerHTML = 'Ничего не выбрано';
+                if (selectedProduct?.type === 'mba') selectedProduct = null;
+            }
         }
+
         document.getElementById('card_programs')?.addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources')?.addEventListener('change', updateSelectedCource);
-        document.getElementById('agree-offer-card')?.addEventListener('change', updateMainButton);
-        document.getElementById('agree-offer-mba')?.addEventListener('change', updateMainButton);
-        document.querySelectorAll('input[name="tabs"]').forEach(tab => tab.addEventListener('change', updateMainButton));
-        if(tg) {
-            tg.MainButton.onClick(() => {
-                if(!selectedProduct) { tg.showAlert("Выберите продукт"); return; }
-                let isAccepted = (selectedProduct.type === 'card') ? document.getElementById('agree-offer-card')?.checked : document.getElementById('agree-offer-mba')?.checked;
-                if(!isAccepted) { tg.showAlert("Подтвердите оферту"); return; }
-                tg.sendData(JSON.stringify({ type: selectedProduct.type, level: selectedProduct.level, price: selectedProduct.price, payment_method: getSelectedPaymentMethod() }));
-                clearSelectedProduct();
-                tg.showAlert("✅ Запрос отправлен");
+
+        // ---------- Покупка (отправка на сервер) ----------
+        function purchaseProduct(productType) {
+            if (!walletConnected) {
+                alert('Сначала подключите кошелёк.');
+                return;
+            }
+            // Проверяем, что продукт выбран
+            if (!selectedProduct || selectedProduct.type !== productType) {
+                alert('Выберите продукт на вкладке.');
+                return;
+            }
+
+            // Проверяем согласие с офертой
+            let isAccepted;
+            if (productType === 'card') {
+                isAccepted = document.getElementById('agree-offer-card')?.checked || false;
+            } else {
+                isAccepted = document.getElementById('agree-offer-mba')?.checked || false;
+            }
+            if (!isAccepted) {
+                alert('Подтвердите согласие с офертой.');
+                return;
+            }
+
+            // Собираем данные
+            const paymentMethod = 'crypto'; // или берём из radio, но сейчас только crypto
+            const payload = {
+                type: selectedProduct.type,
+                level: selectedProduct.level,
+                price: selectedProduct.price,
+                payment_method: paymentMethod,
+                wallet_address: walletAddress,
+                // Можно добавить подпись, но для простоты пока нет
+            };
+
+            // Отправляем запрос на сервер
+            fetch(`${API_BASE_URL}/api/purchase`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(`✅ Покупка успешно оформлена! Детали: ${data.message || ''}`);
+                    // Можно обновить статус пользователя
+                } else {
+                    alert(`❌ Ошибка: ${data.message || 'Неизвестная ошибка'}`);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при покупке:', error);
+                alert(`❌ Не удалось отправить запрос на сервер: ${error.message}`);
             });
         }
-        function clearSelectedProduct() { selectedProduct = null; document.getElementById('card_programs').selectedIndex=0; document.getElementById('Y_cources').selectedIndex=0; document.getElementById('selected_program').innerHTML='Ничего не выбрано'; document.getElementById('selected_cource').innerHTML='Ничего не выбрано'; updateMainButton(); }
+
+        buyCardBtn.addEventListener('click', () => purchaseProduct('card'));
+        buyMbaBtn.addEventListener('click', () => purchaseProduct('mba'));
 
         // ---------- SOLANA WALLET ----------
-        function saveMnemonic(mnemonic) { localStorage.setItem('solana_mnemonic', mnemonic); }
-        function loadMnemonic() { return localStorage.getItem('solana_mnemonic'); }
-        function clearSavedWallet() { localStorage.removeItem('solana_mnemonic'); }
+        function savePrivateKey(privateKey) {
+            localStorage.setItem('solana_private_key', privateKey);
+        }
+        function loadPrivateKey() {
+            return localStorage.getItem('solana_private_key');
+        }
+        function clearSavedWallet() {
+            localStorage.removeItem('solana_private_key');
+        }
 
-        function createWalletFromMnemonic(mnemonic) {
+        function createWalletFromPrivateKey(privateKey) {
             try {
-                const seed = bip39Lib.mnemonicToSeedSync(mnemonic);
-                const keypair = solana.Keypair.fromSeed(seed.slice(0, 32));
+                const keypair = solana.Keypair.fromSecretKey(
+                    Uint8Array.from(Buffer.from(privateKey, 'base58'))
+                );
                 return keypair;
             } catch (e) {
-                console.error('Ошибка создания кошелька:', e);
+                console.error('Ошибка импорта:', e);
                 return null;
             }
         }
 
-        function generateNewMnemonic() {
-            return bip39Lib.generateMnemonic(128);
-        }
-
-        function isValidMnemonic(mnemonic) {
-            return bip39Lib.validateMnemonic(mnemonic);
+        function generateNewWallet() {
+            return solana.Keypair.generate();
         }
 
         function setWallet(keypair) {
             solanaKeypair = keypair;
-            solanaPublicKey = keypair.publicKey;
-            walletAddress = solanaPublicKey.toBase58();
+            walletAddress = keypair.publicKey.toBase58();
             walletConnected = true;
 
             walletAddressDisplay.textContent = walletAddress;
@@ -409,7 +436,6 @@
 
         function disconnectWallet() {
             solanaKeypair = null;
-            solanaPublicKey = null;
             walletConnected = false;
             walletAddress = '';
             clearSavedWallet();
@@ -418,6 +444,7 @@
             solanaConnectPlace.innerHTML = '';
             solBalanceEl.innerHTML = '0.00 <span>SOL</span>';
             ydBalanceEl.innerHTML = '0.00 <span>Y-D</span>';
+            userSolBalance.textContent = '0.00';
             walletStatusMsg.innerHTML = '🔌 Кошелёк отключён.';
             updateQRCode();
 
@@ -429,31 +456,36 @@
         }
 
         async function fetchBalance() {
-            if (!walletConnected || !solanaPublicKey) {
+            if (!walletConnected || !solanaKeypair) {
                 walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
                 return;
             }
             try {
                 const connection = new solana.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-                const balance = await connection.getBalance(solanaPublicKey);
+                const balance = await connection.getBalance(solanaKeypair.publicKey);
                 const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
                 solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
+                userSolBalance.textContent = solBalance;
                 walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
             } catch (err) {
                 console.error('Ошибка получения баланса:', err);
                 solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
+                userSolBalance.textContent = '?';
                 walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}`;
             }
+            // Y-D заглушка
             ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
         }
 
         function initWallet() {
-            const savedMnemonic = loadMnemonic();
-            if (savedMnemonic && isValidMnemonic(savedMnemonic)) {
-                const keypair = createWalletFromMnemonic(savedMnemonic);
+            const savedPrivateKey = loadPrivateKey();
+            if (savedPrivateKey) {
+                const keypair = createWalletFromPrivateKey(savedPrivateKey);
                 if (keypair) {
                     setWallet(keypair);
                     return;
+                } else {
+                    clearSavedWallet();
                 }
             }
             walletSetupModal.style.display = 'flex';
@@ -462,8 +494,12 @@
 
         // ---------- Обработчики модалки ----------
         document.getElementById('btnCreateWallet').addEventListener('click', () => {
-            const mnemonic = generateNewMnemonic();
-            mnemonicDisplay.textContent = mnemonic;
+            const newKeypair = generateNewWallet();
+            const publicKey = newKeypair.publicKey.toBase58();
+            const privateKey = newKeypair.secretKey.toString('base58');
+            newPublicKey.textContent = publicKey;
+            newPrivateKey.textContent = privateKey;
+            window._pendingKeypair = newKeypair;
             step1.style.display = 'none';
             step2create.style.display = 'block';
             step2import.style.display = 'none';
@@ -488,35 +524,30 @@
         });
 
         document.getElementById('btnConfirmCreate').addEventListener('click', () => {
-            const mnemonic = mnemonicDisplay.textContent.trim();
-            if (!mnemonic) return;
-            const keypair = createWalletFromMnemonic(mnemonic);
-            if (keypair) {
-                saveMnemonic(mnemonic);
-                setWallet(keypair);
-            } else {
-                alert('Ошибка создания кошелька. Попробуйте ещё раз.');
+            const keypair = window._pendingKeypair;
+            if (!keypair) {
+                alert('Ошибка: не удалось создать кошелёк.');
+                return;
             }
+            const privateKey = keypair.secretKey.toString('base58');
+            savePrivateKey(privateKey);
+            setWallet(keypair);
+            window._pendingKeypair = null;
         });
 
         document.getElementById('btnConfirmImport').addEventListener('click', () => {
-            const seed = importSeedInput.value.trim();
-            if (!seed) {
-                importError.textContent = 'Введите seed-фразу.';
+            const privateKey = importPrivateKey.value.trim();
+            if (!privateKey) {
+                importError.textContent = 'Введите приватный ключ.';
                 importError.style.display = 'block';
                 return;
             }
-            if (!isValidMnemonic(seed)) {
-                importError.textContent = 'Неверная seed-фраза. Проверьте правильность ввода.';
-                importError.style.display = 'block';
-                return;
-            }
-            const keypair = createWalletFromMnemonic(seed);
+            const keypair = createWalletFromPrivateKey(privateKey);
             if (keypair) {
-                saveMnemonic(seed);
+                savePrivateKey(privateKey);
                 setWallet(keypair);
             } else {
-                importError.textContent = 'Ошибка импорта. Попробуйте другую фразу.';
+                importError.textContent = 'Неверный приватный ключ. Проверьте ввод.';
                 importError.style.display = 'block';
             }
         });
@@ -529,8 +560,8 @@
         disconnectBtnMain.addEventListener('click', disconnectWallet);
 
         // ---------- ЗАПУСК ----------
-        initWallet();
-    });
+        window.addEventListener('DOMContentLoaded', initWallet);
+    })();
 </script>
 
 </body>
