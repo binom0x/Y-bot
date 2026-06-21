@@ -674,11 +674,12 @@
 
 <!-- ===== СКРИПТЫ ===== -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-
-<!-- Локальная библиотека Solana -->
 <script src="solana-web3.min.js"></script>
 
 <script>
+    // Переназначаем глобальный объект для совместимости с UMD-сборкой
+    const solana = window.solanaWeb3 || window.solana;
+
     // ========================================================================
     //  КОНФИГУРАЦИЯ
     // ========================================================================
@@ -687,16 +688,13 @@
     // ========================================================================
     //  ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ
     // ========================================================================
-    (function startApp() {
-        // Проверяем, загружена ли библиотека (глобальный объект solanaWeb3)
-        if (typeof solanaWeb3 === 'undefined') {
+    window.startApp = function() {
+        // Проверяем, загружена ли библиотека
+        if (typeof solana === 'undefined') {
             const msg = document.getElementById('walletStatusMsg');
-            if (msg) msg.innerHTML = '❌ Библиотека Solana не загружена. Убедитесь, что файл solana-web3.min.js находится в той же папке.';
+            if (msg) msg.innerHTML = '❌ Библиотека Solana не загружена. Проверьте наличие файла solana-web3.min.js.';
             return;
         }
-
-        // Достаём классы из solanaWeb3
-        const { Keypair, Connection, PublicKey, LAMPORTS_PER_SOL, SystemProgram, Transaction } = solanaWeb3;
 
         // ---------- Глобальные переменные ----------
         let c_programs = [];
@@ -913,7 +911,8 @@
 
         function createWalletFromPrivateKey(privateKey) {
             try {
-                const keypair = Keypair.fromSecretKey(
+                // privateKey – строка в base58
+                const keypair = solana.Keypair.fromSecretKey(
                     Uint8Array.from(Buffer.from(privateKey, 'base58'))
                 );
                 return keypair;
@@ -924,7 +923,7 @@
         }
 
         function generateNewWallet() {
-            return Keypair.generate();
+            return solana.Keypair.generate();
         }
 
         function setWallet(keypair) {
@@ -972,9 +971,9 @@
                 return;
             }
             try {
-                const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+                const connection = new solana.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
                 const balance = await connection.getBalance(solanaKeypair.publicKey);
-                const solBalance = (balance / LAMPORTS_PER_SOL).toFixed(4);
+                const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
                 solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
                 userSolBalance.textContent = solBalance;
                 walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
@@ -1006,7 +1005,8 @@
         document.getElementById('btnCreateWallet').addEventListener('click', () => {
             const newKeypair = generateNewWallet();
             const publicKey = newKeypair.publicKey.toBase58();
-            const privateKey = newKeypair.secretKey.toString('base58');
+            // Используем bs58.encode для корректного отображения приватного ключа
+            const privateKey = solanaWeb3.bs58.encode(newKeypair.secretKey);
             newPublicKey.textContent = publicKey;
             newPrivateKey.textContent = privateKey;
             window._pendingKeypair = newKeypair;
@@ -1039,7 +1039,7 @@
                 alert('Ошибка: не удалось создать кошелёк.');
                 return;
             }
-            const privateKey = keypair.secretKey.toString('base58');
+            const privateKey = solanaWeb3.bs58.encode(keypair.secretKey);
             savePrivateKey(privateKey);
             setWallet(keypair);
             window._pendingKeypair = null;
@@ -1071,7 +1071,28 @@
 
         // ---------- Запуск ----------
         initWallet();
-    })();
+    };
+
+    // Если библиотека уже загружена, запускаем сразу
+    if (typeof solana !== 'undefined' && window.startApp) {
+        window.startApp();
+    } else {
+        // Ожидание загрузки библиотеки
+        const checkInterval = setInterval(() => {
+            if (typeof solana !== 'undefined' && window.startApp) {
+                window.startApp();
+                clearInterval(checkInterval);
+            }
+        }, 100);
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            const msg = document.getElementById('walletStatusMsg');
+            if (msg && typeof solana === 'undefined') {
+                msg.innerHTML = '❌ Библиотека Solana не загружена. Убедитесь, что файл solana-web3.min.js находится в той же папке.';
+            }
+        }, 5000);
+    }
 </script>
+
 </body>
 </html>
