@@ -7,8 +7,7 @@
     <title>Y - Ваш ключ от будущего!</title>
     <!-- QR-код -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <!-- Solana Web3 -->
-    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js"></script>
+    <!-- Solana Web3 будет загружена динамически -->
 </head>
 <body>
 
@@ -28,7 +27,6 @@
         <div class="dashboard">
             <div class="user-info">
                 <h2>👤 Личная информация</h2>
-                <!-- Вместо Telegram-данных показываем адрес кошелька -->
                 <p><strong>Адрес кошелька:</strong> <span id="wallet-address-display">не подключён</span></p>
                 <p><strong>Баланс SOL:</strong> <span id="user-sol-balance">0.00</span></p>
             </div>
@@ -45,7 +43,6 @@
         <p id="selected_program"></p>
         <div class="payment-method-block">
             <h3>Способ оплаты</h3>
-            <!-- Оставляем только криптовалюту, но можно добавить другие -->
             <label><input type="radio" name="payment_method_card" value="crypto" checked> 💰 Криптовалюта (SOL)</label>
         </div>
         <div class="offer-agreement">
@@ -165,25 +162,48 @@
 
 <script>
     // ========================================================================
-    //  1. КОНФИГУРАЦИЯ
+    //  ЗАГРУЗКА @solana/web3.js С РЕЗЕРВНЫМИ ИСТОЧНИКАМИ
     // ========================================================================
-    const API_BASE_URL = 'http://localhost:8000'; // замените на адрес вашего FastAPI сервера
+    function loadSolanaWeb3(callback) {
+        const sources = [
+            'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js',
+            'https://unpkg.com/@solana/web3.js@1.95.0/dist/index.iife.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.95.0/umd/solana-web3.min.js'
+        ];
+        let index = 0;
 
-    // ========================================================================
-    //  2. ПРОВЕРКА НАЛИЧИЯ SOLANA
-    // ========================================================================
-    if (typeof solana === 'undefined') {
-        alert('Библиотека @solana/web3.js не загружена. Проверьте интернет.');
+        function tryLoad() {
+            if (index >= sources.length) {
+                document.getElementById('walletStatusMsg').innerHTML = '❌ Не удалось загрузить библиотеку Solana. Проверьте интернет.';
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = sources[index];
+            script.onload = () => {
+                if (window.solana) {
+                    callback();
+                } else {
+                    index++;
+                    tryLoad();
+                }
+            };
+            script.onerror = () => {
+                index++;
+                tryLoad();
+            };
+            document.head.appendChild(script);
+        }
+        tryLoad();
     }
 
     // ========================================================================
-    //  3. ОСНОВНОЙ КОД
+    //  ЗАПУСК ПРИЛОЖЕНИЯ ПОСЛЕ ЗАГРУЗКИ SOLANA
     // ========================================================================
-    (function() {
+    loadSolanaWeb3(() => {
         // ---------- Глобальные переменные ----------
         let c_programs = [];
         let y_cources = [];
-        let selectedProduct = null; // { type: 'card'|'mba', level, price }
+        let selectedProduct = null;
         let cachedOffers = { card: null, mba: null };
 
         let solanaKeypair = null;
@@ -327,19 +347,17 @@
         document.getElementById('card_programs')?.addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources')?.addEventListener('change', updateSelectedCource);
 
-        // ---------- Покупка (отправка на сервер) ----------
+        // ---------- Покупка ----------
         function purchaseProduct(productType) {
             if (!walletConnected) {
                 alert('Сначала подключите кошелёк.');
                 return;
             }
-            // Проверяем, что продукт выбран
             if (!selectedProduct || selectedProduct.type !== productType) {
                 alert('Выберите продукт на вкладке.');
                 return;
             }
 
-            // Проверяем согласие с офертой
             let isAccepted;
             if (productType === 'card') {
                 isAccepted = document.getElementById('agree-offer-card')?.checked || false;
@@ -351,18 +369,14 @@
                 return;
             }
 
-            // Собираем данные
-            const paymentMethod = 'crypto'; // или берём из radio, но сейчас только crypto
             const payload = {
                 type: selectedProduct.type,
                 level: selectedProduct.level,
                 price: selectedProduct.price,
-                payment_method: paymentMethod,
+                payment_method: 'crypto',
                 wallet_address: walletAddress,
-                // Можно добавить подпись, но для простоты пока нет
             };
 
-            // Отправляем запрос на сервер
             fetch(`${API_BASE_URL}/api/purchase`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -374,8 +388,7 @@
             })
             .then(data => {
                 if (data.status === 'success') {
-                    alert(`✅ Покупка успешно оформлена! Детали: ${data.message || ''}`);
-                    // Можно обновить статус пользователя
+                    alert(`✅ Покупка успешно оформлена! ${data.message || ''}`);
                 } else {
                     alert(`❌ Ошибка: ${data.message || 'Неизвестная ошибка'}`);
                 }
@@ -473,7 +486,6 @@
                 userSolBalance.textContent = '?';
                 walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}`;
             }
-            // Y-D заглушка
             ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
         }
 
@@ -492,7 +504,7 @@
             updateQRCode();
         }
 
-        // ---------- Обработчики модалки ----------
+        // ---------- Обработчики ----------
         document.getElementById('btnCreateWallet').addEventListener('click', () => {
             const newKeypair = generateNewWallet();
             const publicKey = newKeypair.publicKey.toBase58();
@@ -559,9 +571,9 @@
 
         disconnectBtnMain.addEventListener('click', disconnectWallet);
 
-        // ---------- ЗАПУСК ----------
+        // ---------- Запуск ----------
         window.addEventListener('DOMContentLoaded', initWallet);
-    })();
+    });
 </script>
 
 </body>
