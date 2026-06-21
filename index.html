@@ -680,6 +680,9 @@
     // Переназначаем глобальный объект для совместимости с UMD-сборкой
     const solana = window.solanaWeb3 || window.solana;
 
+    // Флаг для предотвращения повторного запуска
+    let appStarted = false;
+
     // ========================================================================
     //  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С BASE64 (БЕЗ BUFFER)
     // ========================================================================
@@ -711,10 +714,17 @@
     //  ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ
     // ========================================================================
     window.startApp = function() {
+        // Защита от повторного запуска
+        if (appStarted) {
+            console.log('Приложение уже запущено, повторный запуск отменён.');
+            return;
+        }
+        appStarted = true;
+
         // Проверяем, загружена ли библиотека
         if (typeof solana === 'undefined') {
             const msg = document.getElementById('walletStatusMsg');
-            if (msg) msg.innerHTML = '❌ Библиотека Solana не загружена. Проверьте наличие файла solana-web3.min.js.';
+            if (msg) msg.innerHTML = '❌ Библиотека Solana не загружена. Проверьте интернет.';
             return;
         }
 
@@ -985,32 +995,48 @@
             walletSetupModal.style.display = 'flex';
         }
 
+        // ---------- ФУНКЦИЯ ПОЛУЧЕНИЯ БАЛАНСА С FALLBACK ----------
         async function fetchBalance() {
             if (!walletConnected || !solanaKeypair) {
                 walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
                 return;
             }
-            try {
-                // Используем публичный RPC, который точно работает без ключа
-                const connection = new solana.Connection('https://solana-api.projectserum.com', {
-                    commitment: 'confirmed',
-                    httpHeaders: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
-                    }
-                });
-                const balance = await connection.getBalance(solanaKeypair.publicKey);
-                const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
-                solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
-                userSolBalance.textContent = solBalance;
-                walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
-            } catch (err) {
-                console.error('Ошибка получения баланса:', err);
-                solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
-                userSolBalance.textContent = '?';
-                walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}. Попробуйте другой RPC или проверьте сеть.`;
+
+            const rpcEndpoints = [
+                'https://api.mainnet-beta.solana.com',
+                'https://solana-api.projectserum.com',
+                'https://rpc.helium.io',
+                'https://rpc.ankr.com/solana'
+            ];
+
+            let lastError = null;
+            for (const endpoint of rpcEndpoints) {
+                try {
+                    const connection = new solana.Connection(endpoint, {
+                        commitment: 'confirmed',
+                        httpHeaders: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
+                        }
+                    });
+                    const balance = await connection.getBalance(solanaKeypair.publicKey);
+                    const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
+                    solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
+                    userSolBalance.textContent = solBalance;
+                    walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
+                    ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
+                    return;
+                } catch (err) {
+                    console.warn(`RPC ${endpoint} не ответил:`, err.message);
+                    lastError = err;
+                }
             }
+
+            console.error('Все RPC недоступны:', lastError);
+            solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
+            userSolBalance.textContent = '?';
+            walletStatusMsg.innerHTML = `❌ Ошибка: не удалось получить баланс ни с одного RPC. Проверьте интернет.`;
             ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
         }
 
