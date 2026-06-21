@@ -676,78 +676,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
 <!-- script src="solana-web3.min.js"></script -->
-<!-- Исправленная загрузка Solana Web3 (версия 1.87.6 с резервом) -->
-<script>
-    (function loadSolana() {
-        function startAppIfReady() {
-            if (typeof solana !== 'undefined') {
-                console.log('✅ Solana загружена, запускаем приложение');
-                if (window.startApp) window.startApp();
-                return true;
-            }
-            return false;
-        }
-
-        // Попытка 1: загружаем через script с проверенной UMD-сборкой 1.87.6
-        function tryScriptLoad() {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js';
-            script.onload = function() {
-                if (!startAppIfReady()) {
-                    // Если не появилась, пробуем резерв
-                    tryFetchEval();
-                }
-            };
-            script.onerror = function() {
-                tryFetchEval();
-            };
-            document.head.appendChild(script);
-        }
-
-        // Попытка 2: через fetch + eval с принудительным экспортом
-        function tryFetchEval() {
-            fetch('https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js')
-                .then(res => res.text())
-                .then(code => {
-                    // Выполняем код в глобальном контексте
-                    eval(code);
-                    // Если после выполнения solana не появилась, попробуем извлечь из exports
-                    if (typeof solana === 'undefined' && typeof module !== 'undefined' && module.exports) {
-                        window.solana = module.exports;
-                    }
-                    if (!startAppIfReady()) {
-                        // Если всё равно нет, показываем сообщение с кнопкой для ручной загрузки
-                        const msg = document.getElementById('walletStatusMsg');
-                        if (msg) {
-                            msg.innerHTML = '❌ Не удалось загрузить библиотеку Solana. Попробуйте обновить страницу или загрузить вручную: <button id="manualLoadBtn" class="connect-btn" style="margin-left:10px;">Загрузить вручную</button>';
-                            document.getElementById('manualLoadBtn')?.addEventListener('click', function() {
-                                // Повторная загрузка через script с альтернативного CDN
-                                const altScript = document.createElement('script');
-                                altScript.src = 'https://unpkg.com/@solana/web3.js@1.87.6/lib/index.iife.min.js';
-                                altScript.onload = function() {
-                                    if (!startAppIfReady()) {
-                                        alert('Не удалось загрузить библиотеку даже вручную. Проверьте консоль.');
-                                    }
-                                };
-                                document.head.appendChild(altScript);
-                            });
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.error('Ошибка загрузки через fetch:', err);
-                    const msg = document.getElementById('walletStatusMsg');
-                    if (msg) msg.innerHTML = '❌ Ошибка загрузки. Проверьте интернет.';
-                });
-        }
-
-        // Запускаем попытку 1
-        tryScriptLoad();
-
-        // Таймер на случай, если скрипт уже был загружен ранее (например, из кеша)
-        setTimeout(startAppIfReady, 1000);
-    })();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js"></script>
 
 <script>
     // Переназначаем глобальный объект для совместимости с UMD-сборкой
