@@ -649,7 +649,7 @@
             </div>
             <!-- Шаг 2b: импорт -->
             <div id="step2import" style="display: none;">
-                <p>Введите ваш приватный ключ (base58):</p>
+                <p>Введите ваш приватный ключ (base64):</p>
                 <input id="importPrivateKey" type="text" placeholder="Вставьте приватный ключ" />
                 <div style="display: flex; gap: 12px; margin-top: 16px;">
                     <button id="btnConfirmImport" class="connect-btn" style="flex:1;">🔓 Импортировать</button>
@@ -911,9 +911,10 @@
 
         function createWalletFromPrivateKey(privateKey) {
             try {
-                // privateKey – строка в base58
+                // privateKey – строка в base64
+                const buffer = Buffer.from(privateKey, 'base64');
                 const keypair = solana.Keypair.fromSecretKey(
-                    Uint8Array.from(Buffer.from(privateKey, 'base58'))
+                    Uint8Array.from(buffer)
                 );
                 return keypair;
             } catch (e) {
@@ -1005,8 +1006,8 @@
         document.getElementById('btnCreateWallet').addEventListener('click', () => {
             const newKeypair = generateNewWallet();
             const publicKey = newKeypair.publicKey.toBase58();
-            // Используем bs58.encode для корректного отображения приватного ключа
-            const privateKey = solanaWeb3.bs58.encode(newKeypair.secretKey);
+            // Кодируем приватный ключ в base64
+            const privateKey = Buffer.from(newKeypair.secretKey).toString('base64');
             newPublicKey.textContent = publicKey;
             newPrivateKey.textContent = privateKey;
             window._pendingKeypair = newKeypair;
@@ -1039,7 +1040,7 @@
                 alert('Ошибка: не удалось создать кошелёк.');
                 return;
             }
-            const privateKey = solanaWeb3.bs58.encode(keypair.secretKey);
+            const privateKey = Buffer.from(keypair.secretKey).toString('base64');
             savePrivateKey(privateKey);
             setWallet(keypair);
             window._pendingKeypair = null;
