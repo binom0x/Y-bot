@@ -991,19 +991,13 @@
                 return;
             }
             try {
-                // Используем публичный RPC Ankr (работает без ключа)
-                const connection = new solana.Connection('https://rpc.ankr.com/solana', {
+                // Используем публичный RPC, который точно работает без ключа
+                const connection = new solana.Connection('https://solana-api.projectserum.com', {
                     commitment: 'confirmed',
-                    fetch: (url, options) => {
-                        return fetch(url, {
-                            ...options,
-                            headers: {
-                                ...options?.headers,
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
-                            }
-                        });
+                    httpHeaders: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
                     }
                 });
                 const balance = await connection.getBalance(solanaKeypair.publicKey);
