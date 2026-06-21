@@ -1002,19 +1002,18 @@
                 return;
             }
 
-            // RPC, которые в настоящее время работают без ключа (проверено)
+            // Проверенные публичные RPC (без ключа)
             const rpcEndpoints = [
                 'https://api.mainnet-beta.solana.com',
                 'https://solana-api.projectserum.com',
-                'https://rpc.ankr.com/solana'
+                'https://rpc.triton.one/solana'
             ];
 
             let lastError = null;
             for (const endpoint of rpcEndpoints) {
                 try {
-                    // Добавляем таймаут для каждого запроса (через AbortController)
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
                     const connection = new solana.Connection(endpoint, {
                         commitment: 'confirmed',
@@ -1024,17 +1023,12 @@
                             'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
                         },
                         fetch: (url, options) => {
-                            // Передаём сигнал для прерывания
-                            return fetch(url, {
-                                ...options,
-                                signal: controller.signal
-                            });
+                            return fetch(url, { ...options, signal: controller.signal });
                         }
                     });
 
                     const balance = await connection.getBalance(solanaKeypair.publicKey);
-                    clearTimeout(timeoutId); // очищаем таймаут
-
+                    clearTimeout(timeoutId);
                     const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
                     solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
                     userSolBalance.textContent = solBalance;
@@ -1044,14 +1038,13 @@
                 } catch (err) {
                     console.warn(`RPC ${endpoint} не ответил:`, err.message);
                     lastError = err;
-                    // продолжаем со следующим
                 }
             }
 
             console.error('Все RPC недоступны:', lastError);
             solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
             userSolBalance.textContent = '?';
-            walletStatusMsg.innerHTML = `❌ Ошибка: не удалось получить баланс ни с одного RPC. Проверьте интернет.`;
+            walletStatusMsg.innerHTML = `❌ Ошибка: не удалось получить баланс. Проверьте интернет или попробуйте позже.`;
             ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
         }
 
@@ -1148,14 +1141,12 @@
         window.startApp();
     } else {
         const checkInterval = setInterval(() => {
-            // Проверяем, что приложение ещё не запущено и библиотека загружена
             if (typeof solana !== 'undefined' && window.startApp && !appStarted) {
                 window.startApp();
                 clearInterval(checkInterval);
             }
         }, 100);
 
-        // Таймаут, чтобы очистить интервал, если библиотека не загрузилась
         setTimeout(() => {
             clearInterval(checkInterval);
             const msg = document.getElementById('walletStatusMsg');
