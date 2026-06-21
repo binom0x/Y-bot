@@ -7,7 +7,6 @@
     <title>Y - Ваш ключ от будущего!</title>
     <!-- QR-код -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <!-- Solana Web3 будет загружена динамически -->
 </head>
 <body>
 
@@ -162,19 +161,22 @@
 
 <script>
     // ========================================================================
-    //  ЗАГРУЗКА @solana/web3.js С РЕЗЕРВНЫМИ ИСТОЧНИКАМИ
+    //  ЗАГРУЗКА @solana/web3.js С РЕЗЕРВНЫМИ ИСТОЧНИКАМИ (ОБНОВЛЁННЫЕ URL)
     // ========================================================================
     function loadSolanaWeb3(callback) {
         const sources = [
-            'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js',
-            'https://unpkg.com/@solana/web3.js@1.95.0/dist/index.iife.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.95.0/umd/solana-web3.min.js'
+            'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js',
+            'https://unpkg.com/@solana/web3.js@1.87.6/dist/index.iife.min.js',
+            'https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.87.6/umd/solana-web3.min.js'
         ];
         let index = 0;
 
         function tryLoad() {
             if (index >= sources.length) {
-                document.getElementById('walletStatusMsg').innerHTML = '❌ Не удалось загрузить библиотеку Solana. Проверьте интернет.';
+                document.getElementById('walletStatusMsg').innerHTML =
+                    '❌ Не удалось загрузить библиотеку Solana. Проверьте интернет. Если проблема повторяется, вставьте в консоль: ' +
+                    'const script = document.createElement("script"); script.src = "https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"; document.head.appendChild(script); ' +
+                    'затем вызовите window._solanaLoaded()';
                 return;
             }
             const script = document.createElement('script');
@@ -196,10 +198,20 @@
         tryLoad();
     }
 
+    // Ручной запуск после загрузки скрипта вручную
+    window._solanaLoaded = function() {
+        if (window.solana) {
+            document.getElementById('walletStatusMsg').innerHTML = '✅ Библиотека Solana загружена вручную.';
+            startApp();
+        } else {
+            document.getElementById('walletStatusMsg').innerHTML = '❌ Библиотека всё ещё недоступна.';
+        }
+    };
+
     // ========================================================================
     //  ЗАПУСК ПРИЛОЖЕНИЯ ПОСЛЕ ЗАГРУЗКИ SOLANA
     // ========================================================================
-    loadSolanaWeb3(() => {
+    function startApp() {
         // ---------- Глобальные переменные ----------
         let c_programs = [];
         let y_cources = [];
@@ -573,7 +585,10 @@
 
         // ---------- Запуск ----------
         window.addEventListener('DOMContentLoaded', initWallet);
-    });
+    }
+
+    // Запускаем загрузку библиотеки
+    loadSolanaWeb3(startApp);
 </script>
 
 </body>
