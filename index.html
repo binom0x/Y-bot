@@ -991,14 +991,16 @@
                 return;
             }
             try {
-                // Используем публичный RPC с кастомным User-Agent для обхода блокировок
-                const connection = new solana.Connection('https://api.mainnet-beta.solana.com', {
+                // Используем публичный RPC Ankr (работает без ключа)
+                const connection = new solana.Connection('https://rpc.ankr.com/solana', {
                     commitment: 'confirmed',
                     fetch: (url, options) => {
                         return fetch(url, {
                             ...options,
                             headers: {
                                 ...options?.headers,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
                                 'User-Agent': 'Mozilla/5.0 (compatible; Solana-Web3.js/1.95.0)'
                             }
                         });
