@@ -1,25 +1,32 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <link rel="stylesheet" href="miniapp.css" type="text/css" media="all">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <link rel="stylesheet" href="miniapp.css" type="text/css" media="all" />
     <title>Y - Ваш ключ от будущего!</title>
+    <!-- Telegram WebApp (опционально) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- QR-код -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- Solana Web3 и bip39 -->
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bip39@3.1.0/bip39.min.js"></script>
 </head>
 <body>
 
 <main>
-    <input id="tab1" type="radio" name="tabs" checked>
+    <!-- Вкладки -->
+    <input id="tab1" type="radio" name="tabs" checked />
     <label for="tab1">Ваши данные</label>
-    <input id="tab2" type="radio" name="tabs">
+    <input id="tab2" type="radio" name="tabs" />
     <label for="tab2">Y-Карта</label>
-    <input id="tab3" type="radio" name="tabs">
+    <input id="tab3" type="radio" name="tabs" />
     <label for="tab3">Y-MBA</label>
-    <input id="tab4" type="radio" name="tabs">
+    <input id="tab4" type="radio" name="tabs" />
     <label for="tab4">Баланс</label>
 
+    <!-- Секции -->
     <section id="content1">
         <div class="dashboard">
             <div class="user-info">
@@ -27,8 +34,17 @@
                 <p><strong>ID:</strong> <span id="user-id">—</span></p>
                 <p><strong>Имя:</strong> <span id="user-name">—</span></p>
                 <p><strong>Username:</strong> <span id="user-username">—</span></p>
+                <p><strong>Адрес кошелька:</strong> <span id="wallet-address-display">не подключён</span></p>
             </div>
-            <div id="qr-place"></div>
+            <div id="qr-place">
+                <!-- Здесь будет QR-код с адресом кошелька или сообщение -->
+            </div>
+            <!-- !!! НОВАЯ КНОПКА ОТКЛЮЧЕНИЯ КОШЕЛЬКА -->
+            <div style="margin-top: 20px; text-align: center;">
+                <button id="disconnectWalletBtnMain" class="connect-btn disconnect-btn" style="width: 100%;">
+                    🔌 Отключить кошелёк
+                </button>
+            </div>
         </div>
     </section>
 
@@ -43,7 +59,7 @@
             <label><input type="radio" name="payment_method_card" value="yoomoney"> 💰 YooMoney</label>
         </div>
         <div class="offer-agreement">
-            <input type="checkbox" id="agree-offer-card">
+            <input type="checkbox" id="agree-offer-card" />
             <label for="agree-offer-card">Я ознакомлен(а) и согласен(сна) с условиями <a href="javascript:void(0)" data-offer-type="card" class="offer-link">Публичной оферты (Y‑Карта)</a></label>
         </div>
     </section>
@@ -59,7 +75,7 @@
             <label><input type="radio" name="payment_method_mba" value="yoomoney"> 💰 YooMoney</label>
         </div>
         <div class="offer-agreement">
-            <input type="checkbox" id="agree-offer-mba">
+            <input type="checkbox" id="agree-offer-mba" />
             <label for="agree-offer-mba">Я ознакомлен(а) и согласен(сна) с условиями <a href="javascript:void(0)" data-offer-type="mba" class="offer-link">Публичной оферты (Y‑MBA)</a></label>
         </div>
     </section>
@@ -69,21 +85,23 @@
             <div class="wallet-card">
                 <div class="wallet-header">
                     <div class="wallet-title">
-                        <i class="fa fa-connectdevelop" aria-hidden="true"></i> 
-                        <span>TON Wallet</span>
+                        <i class="fa fa-connectdevelop" aria-hidden="true"></i>
+                        <span>Solana Wallet</span>
                     </div>
-                    <div id="ton-connect-place"></div>
+                    <div id="solana-connect-place">
+                        <!-- Адрес или кнопка -->
+                    </div>
                 </div>
                 <div class="balance-grid">
                     <div class="balance-item">
                         <div class="balance-left">
-                            <div class="balance-icon">💎</div>
+                            <div class="balance-icon">◎</div>
                             <div class="balance-info">
-                                <h4>TON</h4>
+                                <h4>SOL</h4>
                                 <small>Основная сеть</small>
                             </div>
                         </div>
-                        <div class="balance-value" id="ton-balance">0.00 <span>TON</span></div>
+                        <div class="balance-value" id="sol-balance">0.00 <span>SOL</span></div>
                     </div>
                     <div class="balance-item">
                         <div class="balance-left">
@@ -100,20 +118,54 @@
                     <button id="refreshBalanceBtn" class="refresh-balance"><i class="fa fa-refresh"></i> Обновить баланс</button>
                 </div>
             </div>
-
-            <div class="network-bar">
-                <div class="network-buttons">
-                    <button id="mainnetBtn" class="network-btn active">🌍 Mainnet</button>
-                    <button id="testnetBtn" class="network-btn">🧪 Testnet</button>
-                </div>
-            </div>
             <div id="walletStatusMsg" class="status-message">
-                💡 Загрузка TON Connect...
+                💡 Загрузка...
             </div>
         </div>
     </section>
 </main>
 
+<!-- МОДАЛЬНОЕ ОКНО ПЕРВОГО ЗАПУСКА / ПОВТОРНОГО ПОДКЛЮЧЕНИЯ -->
+<div id="walletSetupModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3>🔐 Подключение кошелька</h3>
+            <span class="close-modal" id="closeSetupModal" style="display: none;">&times;</span>
+        </div>
+        <div class="modal-body" id="setupModalBody">
+            <!-- Шаг 1: выбор действия -->
+            <div id="step1">
+                <p>Для работы с приложением необходим кошелёк Solana.</p>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+                    <button id="btnCreateWallet" class="connect-btn" style="width:100%;">✨ Создать новый кошелёк</button>
+                    <button id="btnImportWallet" class="connect-btn" style="width:100%; background: #6c819a;">🔑 Импортировать существующий</button>
+                </div>
+            </div>
+            <!-- Шаг 2a: создание нового -->
+            <div id="step2create" style="display: none;">
+                <p><strong>Ваша мнемоническая фраза (12 слов):</strong></p>
+                <div style="background: #f0f4f8; padding: 16px; border-radius: 16px; font-family: monospace; font-size: 16px; word-break: break-word; margin: 12px 0;" id="mnemonicDisplay"></div>
+                <p style="font-size: 14px; color: #d32f2f;">⚠️ Сохраните эту фразу в надёжном месте! Без неё вы не сможете восстановить доступ к кошельку.</p>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button id="btnConfirmCreate" class="connect-btn" style="flex:1;">✅ Я сохранил(а), создать</button>
+                    <button id="btnBackFromCreate" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
+                </div>
+            </div>
+            <!-- Шаг 2b: импорт -->
+            <div id="step2import" style="display: none;">
+                <p>Введите вашу seed-фразу (12 или 24 слова):</p>
+                <textarea id="importSeedInput" rows="4" style="width:100%; padding: 12px; border-radius: 14px; border: 1px solid #cdd9ed; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button id="btnConfirmImport" class="connect-btn" style="flex:1;">🔓 Импортировать</button>
+                    <button id="btnBackFromImport" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
+                </div>
+                <div id="importError" style="color:red; margin-top: 8px; display: none;">Неверная seed-фраза. Попробуйте снова.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка оферты (без изменений) -->
 <div id="offerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -125,50 +177,44 @@
 </div>
 
 <script>
-    // ---------------------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ -------------------------
+    // ========================== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ==========================
     let c_programs = [];
     let y_cources = [];
     let selectedProduct = null;
     let tgUser = null;
     let tg = null;
     let cachedOffers = { card: null, mba: null };
-    
-    let tonConnectUI = null;
+
+    // ---------- Solana Wallet ----------
+    let solanaKeypair = null;
+    let solanaPublicKey = null;
     let walletConnected = false;
-    let currentNetwork = 'mainnet';
-    let currentWalletAddress = null;
-    
-    // ПУБЛИЧНЫЙ ЭНДПОИНТ БЕЗ КЛЮЧА (РАБОТАЕТ ВСЕГДА)
-    const MAINNET_API = 'https://toncenter.com/api/v2/getAddressInformation?address=';
-    const TESTNET_API = 'https://testnet.toncenter.com/api/v2/getAddressInformation?address=';
-    const YD_JETTON_MASTER = 'EQDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Замените позже
-    
-    function getApiBase() {
-        return currentNetwork === 'mainnet' ? MAINNET_API : TESTNET_API;
+    let walletAddress = '';
+
+    // ---------- DOM-ссылки ----------
+    const walletSetupModal = document.getElementById('walletSetupModal');
+    const step1 = document.getElementById('step1');
+    const step2create = document.getElementById('step2create');
+    const step2import = document.getElementById('step2import');
+    const mnemonicDisplay = document.getElementById('mnemonicDisplay');
+    const importSeedInput = document.getElementById('importSeedInput');
+    const importError = document.getElementById('importError');
+    const qrPlace = document.getElementById('qr-place');
+    const walletAddressDisplay = document.getElementById('wallet-address-display');
+    const solanaConnectPlace = document.getElementById('solana-connect-place');
+    const solBalanceEl = document.getElementById('sol-balance');
+    const ydBalanceEl = document.getElementById('yd-balance');
+    const walletStatusMsg = document.getElementById('walletStatusMsg');
+    const refreshBalanceBtn = document.getElementById('refreshBalanceBtn');
+    const disconnectBtnMain = document.getElementById('disconnectWalletBtnMain');
+
+    // ========================== РАБОТА С TELEGRAM (опционально) ==========================
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
     }
-    
-    // Проверка адреса
-	function isValidTonAddress(address) {
-		if (!address || typeof address !== 'string') return false;
-		address = address.trim();
-		// Стандартный user‑friendly формат (EQ/UQ)
-		if ((address.startsWith('EQ') || address.startsWith('UQ')) && address.length >= 40) {
-			return true;
-		}
-		// Raw формат: 0: + 64 шестнадцатеричных символа
-		if (/^0:[0-9a-fA-F]{64}$/.test(address)) {
-			return true;
-		}
-		return false;
-	}
-    
-    // ---------------------- TELEGRAM -------------------------
-    if (window.Telegram && window.Telegram.WebApp) { 
-        tg = window.Telegram.WebApp; 
-        tg.ready(); 
-        tg.expand(); 
-    }
-    
+
     function getTelegramUser() {
         if (!tg) return null;
         if (tg.initDataUnsafe?.user) return tg.initDataUnsafe.user;
@@ -177,33 +223,44 @@
         if (userId) return { id: parseInt(userId,10), first_name: decodeURIComponent(urlParams.get('first_name') || ''), username: decodeURIComponent(urlParams.get('username') || '') };
         return null;
     }
-    
+
     tgUser = getTelegramUser();
     const tgButtonColor = tg ? tg.themeParams.button_color || '#30a2ff' : '#30a2ff';
+
     if (tgUser) {
         document.getElementById('user-id').innerHTML = tgUser.id.toString();
         document.getElementById('user-name').innerHTML = tgUser.first_name || 'Пользователь';
         document.getElementById('user-username').innerHTML = tgUser.username ? '@' + tgUser.username : '—';
-        displayQRCode('#qr-place', tgUser.id.toString(), 180, tgButtonColor);
     } else {
         document.getElementById('user-id').innerHTML = "Не удалось определить пользователя.";
-        displayQRCode('#qr-place', 'Пользователь не известен', 180, tgButtonColor);
     }
-    
-    function displayQRCode(container, text, size, color, margin = 2) {
+
+    // ========================== QR-КОД (теперь привязан к адресу кошелька) ==========================
+    function displayQRCode(container, text, size = 180, color = '#000000', margin = 2) {
         const target = typeof container === 'string' ? document.querySelector(container) : container;
         if (!target) return;
-        let darkColor = '#000000', lightColor = '#ffffff';
-        if (typeof color === 'string') darkColor = color;
         target.innerHTML = '';
+        if (!text) {
+            target.innerHTML = '<p style="color: #888; text-align: center;">Кошелёк не подключён</p>';
+            return;
+        }
         const canvas = document.createElement('canvas');
         target.appendChild(canvas);
-        QRCode.toCanvas(canvas, text, { width: size, margin, color: { dark: darkColor, light: lightColor } }, (error) => {
+        QRCode.toCanvas(canvas, text, { width: size, margin, color: { dark: color, light: '#ffffff' } }, (error) => {
             if (error) target.innerHTML = '<p style="color:red;">Ошибка QR</p>';
         });
     }
-    
-    // ---------------------- ЗАГРУЗКА КАТАЛОГА -------------------------
+
+    // !!! Обновление QR-кода на основе текущего состояния кошелька
+    function updateQRCode() {
+        if (walletConnected && walletAddress) {
+            displayQRCode(qrPlace, walletAddress, 180, tgButtonColor);
+        } else {
+            displayQRCode(qrPlace, null); // покажет "Кошелёк не подключён"
+        }
+    }
+
+    // ========================== ЗАГРУЗКА КАТАЛОГА ==========================
     fetch('content.json').then(r => r.json()).then(data => {
         c_programs = data[5].product;
         const s1 = document.getElementById('card_programs');
@@ -212,8 +269,8 @@
         const s2 = document.getElementById('Y_cources');
         y_cources.forEach(item => { let opt = document.createElement('option'); opt.value = item.level; opt.textContent = `${item.level} (${item.price} руб.)`; s2.appendChild(opt); });
     }).catch(err => console.error("Ошибка загрузки каталога:", err));
-    
-    // ---------------------- ОФЕРТЫ -------------------------
+
+    // ========================== ОФЕРТЫ (без изменений) ==========================
     function loadOfferByType(type) {
         if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
         const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
@@ -231,8 +288,8 @@
     document.querySelectorAll('.offer-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); showOfferModal(link.dataset.offerType); }));
     document.getElementById('closeModalBtn')?.addEventListener('click', closeOfferModal);
     window.onclick = (event) => { if(event.target === document.getElementById('offerModal')) closeOfferModal(); };
-    
-    // ---------------------- ПОКУПКА -------------------------
+
+    // ========================== ПОКУПКА (без изменений) ==========================
     function getSelectedPaymentMethod() {
         const activeTabId = document.querySelector('input[name="tabs"]:checked')?.id;
         if (activeTabId === 'tab2') return document.querySelector('#content2 input[name="payment_method_card"]:checked')?.value || 'stars';
@@ -269,223 +326,218 @@
     document.getElementById('agree-offer-card')?.addEventListener('change', updateMainButton);
     document.getElementById('agree-offer-mba')?.addEventListener('change', updateMainButton);
     document.querySelectorAll('input[name="tabs"]').forEach(tab => tab.addEventListener('change', updateMainButton));
-    if(tg) { tg.MainButton.onClick(() => {
-        if(!selectedProduct) { tg.showAlert("Выберите продукт"); return; }
-        let isAccepted = (selectedProduct.type === 'card') ? document.getElementById('agree-offer-card')?.checked : document.getElementById('agree-offer-mba')?.checked;
-        if(!isAccepted) { tg.showAlert("Подтвердите оферту"); return; }
-        tg.sendData(JSON.stringify({ type: selectedProduct.type, level: selectedProduct.level, price: selectedProduct.price, payment_method: getSelectedPaymentMethod() }));
-        clearSelectedProduct();
-        tg.showAlert("✅ Запрос отправлен");
-    }); }
-    function clearSelectedProduct() { selectedProduct = null; document.getElementById('card_programs').selectedIndex=0; document.getElementById('Y_cources').selectedIndex=0; document.getElementById('selected_program').innerHTML='Ничего не выбрано'; document.getElementById('selected_cource').innerHTML='Ничего не выбрано'; updateMainButton(); }
-    
-    // ======================== TON CONNECT ========================
-    function loadTonConnectScript() {
-        return new Promise((resolve, reject) => {
-            if (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) {
-                resolve();
-                return;
-            }
-            const urls = [
-                'https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js',
-                'https://cdn.jsdelivr.net/npm/@tonconnect/ui@latest/dist/tonconnect-ui.min.js'
-            ];
-            let idx = 0;
-            function attemptLoad() {
-                if (idx >= urls.length) {
-                    reject(new Error('Не удалось загрузить TON Connect UI'));
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = urls[idx];
-                script.onload = () => {
-                    if (window.TON_CONNECT_UI && window.TON_CONNECT_UI.TonConnectUI) resolve();
-                    else reject(new Error('Конструктор не найден'));
-                };
-                script.onerror = () => { idx++; attemptLoad(); };
-                document.head.appendChild(script);
-            }
-            attemptLoad();
+    if(tg) {
+        tg.MainButton.onClick(() => {
+            if(!selectedProduct) { tg.showAlert("Выберите продукт"); return; }
+            let isAccepted = (selectedProduct.type === 'card') ? document.getElementById('agree-offer-card')?.checked : document.getElementById('agree-offer-mba')?.checked;
+            if(!isAccepted) { tg.showAlert("Подтвердите оферту"); return; }
+            tg.sendData(JSON.stringify({ type: selectedProduct.type, level: selectedProduct.level, price: selectedProduct.price, payment_method: getSelectedPaymentMethod() }));
+            clearSelectedProduct();
+            tg.showAlert("✅ Запрос отправлен");
         });
     }
-    
-    async function initTonConnect() {
+    function clearSelectedProduct() { selectedProduct = null; document.getElementById('card_programs').selectedIndex=0; document.getElementById('Y_cources').selectedIndex=0; document.getElementById('selected_program').innerHTML='Ничего не выбрано'; document.getElementById('selected_cource').innerHTML='Ничего не выбрано'; updateMainButton(); }
+
+    // ========================== SOLANA WALLET ==========================
+
+    function saveMnemonic(mnemonic) {
+        localStorage.setItem('solana_mnemonic', mnemonic);
+    }
+    function loadMnemonic() {
+        return localStorage.getItem('solana_mnemonic');
+    }
+    function clearSavedWallet() {
+        localStorage.removeItem('solana_mnemonic');
+    }
+
+    function createWalletFromMnemonic(mnemonic) {
         try {
-            await loadTonConnectScript();
-            await new Promise(r => setTimeout(r, 50));
-            const manifestUrl = 'https://binom0x.github.io/Y-bot/tonconnect-manifest.json';
-            const manifestCheck = await fetch(manifestUrl, { method: 'HEAD', cache: 'no-store' });
-            if (!manifestCheck.ok) throw new Error(`Манифест недоступен (HTTP ${manifestCheck.status})`);
-            
-            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: manifestUrl,
-                buttonRootId: 'ton-connect-place'
-            });
-            
-            tonConnectUI.onStatusChange(async (wallet) => {
-                if (wallet) {
-                    walletConnected = true;
-                    currentWalletAddress = wallet.account.address;
-                    console.log("✅ Кошелёк подключён, адрес:", currentWalletAddress);
-                    document.getElementById('walletStatusMsg').innerHTML = `✅ Кошелёк подключён: ${currentWalletAddress.slice(0,6)}...${currentWalletAddress.slice(-4)}`;
-                    await fetchBalances();
-                } else {
-                    walletConnected = false;
-                    currentWalletAddress = null;
-                    document.getElementById('ton-balance').innerHTML = '0.00 <span>TON</span>';
-                    document.getElementById('yd-balance').innerHTML = '0.00 <span>Y-D</span>';
-                    document.getElementById('walletStatusMsg').innerHTML = '🔌 Кошелёк не подключён. Нажмите «Подключить TON Wallet»';
-                }
-            });
-            document.getElementById('walletStatusMsg').innerHTML = '💡 Нажмите кнопку, чтобы подключить кошелёк';
+            const seed = bip39.mnemonicToSeedSync(mnemonic);
+            const keypair = solana.Keypair.fromSeed(seed.slice(0, 32));
+            return keypair;
+        } catch (e) {
+            console.error('Ошибка создания кошелька:', e);
+            return null;
+        }
+    }
+
+    function generateNewMnemonic() {
+        return bip39.generateMnemonic(128);
+    }
+
+    function isValidMnemonic(mnemonic) {
+        return bip39.validateMnemonic(mnemonic);
+    }
+
+    // !!! Установка кошелька
+    function setWallet(keypair) {
+        solanaKeypair = keypair;
+        solanaPublicKey = keypair.publicKey;
+        walletAddress = solanaPublicKey.toBase58();
+        walletConnected = true;
+
+        // Обновляем отображение адреса в личной информации
+        walletAddressDisplay.textContent = walletAddress;
+
+        // Обновляем виджет в шапке баланса
+        solanaConnectPlace.innerHTML = `
+            <span class="wallet-address">${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}</span>
+            <button id="disconnectWalletBtn" class="connect-btn disconnect-btn" style="margin-left: 10px;">Отключить</button>
+        `;
+        document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
+
+        // Обновляем статус
+        walletStatusMsg.innerHTML = `✅ Кошелёк подключён: ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}`;
+
+        // Генерируем QR-код с адресом
+        updateQRCode();
+
+        // Получаем баланс
+        fetchBalance();
+
+        // Скрываем модалку
+        walletSetupModal.style.display = 'none';
+    }
+
+    // !!! ОТКЛЮЧЕНИЕ КОШЕЛЬКА (полный сброс)
+    function disconnectWallet() {
+        // Сбрасываем состояние
+        solanaKeypair = null;
+        solanaPublicKey = null;
+        walletConnected = false;
+        walletAddress = '';
+        clearSavedWallet();
+
+        // Обновляем интерфейс
+        walletAddressDisplay.textContent = 'не подключён';
+        solanaConnectPlace.innerHTML = '';
+        solBalanceEl.innerHTML = '0.00 <span>SOL</span>';
+        ydBalanceEl.innerHTML = '0.00 <span>Y-D</span>';
+        walletStatusMsg.innerHTML = '🔌 Кошелёк отключён.';
+
+        // Обновляем QR-код (показывает "не подключён")
+        updateQRCode();
+
+        // Показываем модальное окно настройки (как при первом запуске)
+        // Сбрасываем шаги к начальному
+        step1.style.display = 'block';
+        step2create.style.display = 'none';
+        step2import.style.display = 'none';
+        importError.style.display = 'none';
+        walletSetupModal.style.display = 'flex';
+    }
+
+    // Получение баланса SOL
+    async function fetchBalance() {
+        if (!walletConnected || !solanaPublicKey) {
+            walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
+            return;
+        }
+        try {
+            const connection = new solana.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+            const balance = await connection.getBalance(solanaPublicKey);
+            const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
+            solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
+            walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
         } catch (err) {
-            console.error('TON Connect init error:', err);
-            document.getElementById('walletStatusMsg').innerHTML = `⚠️ Ошибка: ${err.message}. Включён демо-режим.`;
-            enableDemoMode();
+            console.error('Ошибка получения баланса:', err);
+            solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
+            walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}`;
         }
+        // Y-D пока заглушка
+        ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
     }
-    
-    function enableDemoMode() {
-        const container = document.getElementById('ton-connect-place');
-        if (!container) return;
-        container.innerHTML = '<button class="connect-btn" id="mockConnectBtn">🔗 Демо-подключение</button>';
-        const mockBtn = document.getElementById('mockConnectBtn');
-        if (mockBtn) {
-            mockBtn.addEventListener('click', () => {
-                walletConnected = !walletConnected;
-                if (walletConnected) {
-                    currentWalletAddress = "EQDemosamplewalletaddress1234";
-                    document.getElementById('ton-balance').innerHTML = '124.50 <span>TON</span>';
-                    document.getElementById('yd-balance').innerHTML = '8750.00 <span>Y-D</span>';
-                    document.getElementById('walletStatusMsg').innerHTML = '✅ Демо-кошелёк активен (балансы фиктивны)';
-                } else {
-                    currentWalletAddress = null;
-                    document.getElementById('ton-balance').innerHTML = '0.00 <span>TON</span>';
-                    document.getElementById('yd-balance').innerHTML = '0.00 <span>Y-D</span>';
-                    document.getElementById('walletStatusMsg').innerHTML = 'Демо-режим: кошелёк отключён';
-                }
-            });
-        }
-    }
-    
-    // ============ ПОЛУЧЕНИЕ БАЛАНСОВ (работает с публичным API) ============
-    async function fetchBalances() {
-        if (!walletConnected || !currentWalletAddress) {
-            console.warn("Кошелёк не подключён");
-            return;
-        }
-        
-        // Если адрес невалидный – пробуем переподключить? Но просто покажем ошибку.
-        if (!isValidTonAddress(currentWalletAddress)) {
-            console.error("Адрес не в формате EQ/UQ:", currentWalletAddress);
-            document.getElementById('walletStatusMsg').innerHTML = `⚠️ Неверный формат адреса кошелька. Попробуйте отключиться и подключиться снова.`;
-            document.getElementById('ton-balance').innerHTML = `? <span>TON</span>`;
-            document.getElementById('yd-balance').innerHTML = `? <span>Y-D</span>`;
-            return;
-        }
-        
-        const api = getApiBase(); // теперь это строка вида 'https://...?address='
-        const url = api + encodeURIComponent(currentWalletAddress);
-        console.log("Запрос баланса TON:", url);
-        
-        try {
-            const resp = await fetch(url);
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json();
-            if (data.ok && data.result && typeof data.result.balance !== 'undefined') {
-                const balanceNano = parseInt(data.result.balance, 10);
-                const tonBalanceFormatted = (balanceNano / 1e9).toFixed(4);
-                document.getElementById('ton-balance').innerHTML = `${tonBalanceFormatted} <span>TON</span>`;
-                document.getElementById('walletStatusMsg').innerHTML = `✅ Баланс TON: ${tonBalanceFormatted}`;
-            } else {
-                throw new Error("Неверный ответ API: " + JSON.stringify(data));
+
+    // !!! Инициализация: проверяем сохранённый кошелёк
+    function initWallet() {
+        const savedMnemonic = loadMnemonic();
+        if (savedMnemonic && isValidMnemonic(savedMnemonic)) {
+            const keypair = createWalletFromMnemonic(savedMnemonic);
+            if (keypair) {
+                setWallet(keypair);
+                return;
             }
-        } catch (err) {
-            console.error("Ошибка получения TON баланса:", err);
-            document.getElementById('ton-balance').innerHTML = `⚠️ <span>TON</span>`;
-            document.getElementById('walletStatusMsg').innerHTML = `❌ Ошибка TON: ${err.message}`;
         }
-        
-        // YD – заглушка, пока не задан реальный Jetton Master
-        document.getElementById('yd-balance').innerHTML = `0.00 <span>Y-D</span>`;
+        // Нет кошелька – показываем модалку и QR-заглушку
+        walletSetupModal.style.display = 'flex';
+        updateQRCode(); // покажет "не подключён"
     }
-    
-    function setNetwork(isTestnet) {
-        currentNetwork = isTestnet ? 'testnet' : 'mainnet';
-        const mainBtn = document.getElementById('mainnetBtn');
-        const testBtn = document.getElementById('testnetBtn');
-        if(isTestnet) { mainBtn.classList.remove('active'); testBtn.classList.add('active'); }
-        else { testBtn.classList.remove('active'); mainBtn.classList.add('active'); }
-        document.getElementById('walletStatusMsg').innerHTML = `🌐 Сеть: ${currentNetwork === 'mainnet' ? 'Mainnet' : 'Testnet'}. Обновите баланс.`;
-        if(walletConnected) fetchBalances();
-    }
-    
-    document.getElementById('mainnetBtn')?.addEventListener('click', () => setNetwork(false));
-    document.getElementById('testnetBtn')?.addEventListener('click', () => setNetwork(true));
-    document.getElementById('refreshBalanceBtn')?.addEventListener('click', () => { 
-        if(walletConnected) fetchBalances(); 
-        else document.getElementById('walletStatusMsg').innerHTML = 'Подключите кошелёк для обновления баланса'; 
+
+    // ========================== ОБРАБОТЧИКИ МОДАЛЬНОГО ОКНА ==========================
+    document.getElementById('btnCreateWallet').addEventListener('click', () => {
+        const mnemonic = generateNewMnemonic();
+        mnemonicDisplay.textContent = mnemonic;
+        step1.style.display = 'none';
+        step2create.style.display = 'block';
+        step2import.style.display = 'none';
     });
-    
-    // Иконки токенов (TON – официальная, Y-D – из манифеста или заглушка)
-    function setTokenIcon(tokenName, iconUrl, altText) {
-        const items = document.querySelectorAll('.balance-item');
-        for (let item of items) {
-            const titleElem = item.querySelector('.balance-info h4');
-            if (titleElem && titleElem.innerText.trim() === tokenName) {
-                const iconDiv = item.querySelector('.balance-icon');
-                if (iconDiv) {
-                    iconDiv.innerHTML = '';
-                    const img = document.createElement('img');
-                    img.src = iconUrl;
-                    img.alt = altText;
-                    img.style.width = '28px';
-                    img.style.height = '28px';
-                    img.style.objectFit = 'contain';
-                    img.onerror = () => {
-                        iconDiv.innerHTML = tokenName === 'TON' ? '⚡' : '🟡';
-                        iconDiv.style.fontSize = '24px';
-                    };
-                    iconDiv.appendChild(img);
-                }
-                break;
-            }
+
+    document.getElementById('btnImportWallet').addEventListener('click', () => {
+        step1.style.display = 'none';
+        step2create.style.display = 'none';
+        step2import.style.display = 'block';
+        importError.style.display = 'none';
+    });
+
+    document.getElementById('btnBackFromCreate').addEventListener('click', () => {
+        step2create.style.display = 'none';
+        step1.style.display = 'block';
+    });
+
+    document.getElementById('btnBackFromImport').addEventListener('click', () => {
+        step2import.style.display = 'none';
+        step1.style.display = 'block';
+        importError.style.display = 'none';
+    });
+
+    document.getElementById('btnConfirmCreate').addEventListener('click', () => {
+        const mnemonic = mnemonicDisplay.textContent.trim();
+        if (!mnemonic) return;
+        const keypair = createWalletFromMnemonic(mnemonic);
+        if (keypair) {
+            saveMnemonic(mnemonic);
+            setWallet(keypair);
+        } else {
+            alert('Ошибка создания кошелька. Попробуйте ещё раз.');
         }
-    }
-    
-    const OFFICIAL_TON_ICON = 'https://cryptologos.cc/logos/toncoin-ton-logo.svg?v=024';
-    setTokenIcon('TON', OFFICIAL_TON_ICON, 'TON Coin');
-    
-    async function loadYDTokenIconFromManifest() {
-        try {
-            const manifestUrl = 'https://binom0x.github.io/Y-bot/tonconnect-manifest.json';
-            const response = await fetch(manifestUrl, { cache: 'force-cache' });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const manifestData = await response.json();
-            let ydIconUrl = manifestData.ydIconUrl || manifestData.iconUrl || (manifestData.icons?.[0]?.url);
-            if (ydIconUrl) {
-                if (ydIconUrl.startsWith('/')) {
-                    const baseUrl = manifestUrl.substring(0, manifestUrl.lastIndexOf('/') + 1);
-                    ydIconUrl = baseUrl + ydIconUrl.replace(/^\//, '');
-                } else if (!ydIconUrl.startsWith('http')) {
-                    const baseUrl = manifestUrl.substring(0, manifestUrl.lastIndexOf('/') + 1);
-                    ydIconUrl = baseUrl + ydIconUrl;
-                }
-                setTokenIcon('Y-D', ydIconUrl, 'Y-D Token');
-            } else {
-                throw new Error('Нет иконки в манифесте');
-            }
-        } catch (err) {
-            console.warn('Не удалось загрузить иконку Y-D:', err);
-            const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%2330a2ff' /%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-weight='bold'%3EY-D%3C/text%3E%3C/svg%3E";
-            setTokenIcon('Y-D', fallbackSvg, 'Y-D (заглушка)');
+    });
+
+    document.getElementById('btnConfirmImport').addEventListener('click', () => {
+        const seed = importSeedInput.value.trim();
+        if (!seed) {
+            importError.textContent = 'Введите seed-фразу.';
+            importError.style.display = 'block';
+            return;
         }
-    }
-    
+        if (!isValidMnemonic(seed)) {
+            importError.textContent = 'Неверная seed-фраза. Проверьте правильность ввода.';
+            importError.style.display = 'block';
+            return;
+        }
+        const keypair = createWalletFromMnemonic(seed);
+        if (keypair) {
+            saveMnemonic(seed);
+            setWallet(keypair);
+        } else {
+            importError.textContent = 'Ошибка импорта. Попробуйте другую фразу.';
+            importError.style.display = 'block';
+        }
+    });
+
+    // Кнопка обновления баланса
+    refreshBalanceBtn.addEventListener('click', () => {
+        if (walletConnected) fetchBalance();
+        else walletStatusMsg.innerHTML = 'Подключите кошелёк для обновления баланса.';
+    });
+
+    // !!! Кнопка "Отключить кошелёк" на вкладке "Ваши данные"
+    disconnectBtnMain.addEventListener('click', disconnectWallet);
+
+    // ========================== ЗАПУСК ==========================
     window.addEventListener('DOMContentLoaded', () => {
-        initTonConnect();
-        loadYDTokenIconFromManifest();
+        initWallet();
     });
 </script>
+
 </body>
 </html>

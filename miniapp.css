@@ -1,87 +1,87 @@
-/* ========== ОСНОВНЫЕ СТИЛИ (miniapp.css + улучшения для вкладки Баланс) ========== */
+/* ========== ОСНОВНЫЕ СТИЛИ (miniapp.css + улучшения) ========== */
 @import url("https://fonts.googleapis.com/css?family=Open+Sans:400,600,700");
 @import url("https://netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.css");
 
 *, *:before, *:after {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 html, body { 
-	height: 100%;
+    height: 100%;
 }
 
 body {
-	font: 14px/1 'Open Sans', sans-serif;
-	color: #000000;
-	background: #225577;
+    font: 14px/1 'Open Sans', sans-serif;
+    color: #000000;
+    background: #225577;
 }
 
 h1 {
-	padding: 10px;
-	font-weight: 400;
-	text-align: center;
-	color: #000000;
+    padding: 10px;
+    font-weight: 400;
+    text-align: center;
+    color: #000000;
 }
 
 h2 {
-	color: #000000;
-	font-size: 1.4rem;
-	margin-bottom: 1rem;
-	font-weight: 600;
+    color: #000000;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
 }
 
 p { 
-	margin: 0 0 20px; 
-	line-height: 1.5; 
+    margin: 0 0 20px; 
+    line-height: 1.5; 
 }
 
 main {
-	min-width: 220px;
-	max-width: 600px;
-	height: 100vh;
-	padding: 1em;
-	margin: 0 auto;
-	background-image: url("Y.png");
-	background-color: #eef2f5;
-	color: #000000;
-	overflow-y: auto;
+    min-width: 220px;
+    max-width: 600px;
+    height: 100vh;
+    padding: 1em;
+    margin: 0 auto;
+    background-image: url("Y.png");
+    background-color: #eef2f5;
+    color: #000000;
+    overflow-y: auto;
 }
 
 section {
-	display: none;
-	padding: 20px 0 0;
-	border-top: 1px solid #ddd;
-	color: #000000;
+    display: none;
+    padding: 20px 0 0;
+    border-top: 1px solid #ddd;
+    color: #000000;
 }
 
 input[id^="tab"] {
-	display: none;
+    display: none;
 }
 
 select, button, textarea {
-	color: #000000;
-	background: #f4f6f9;
-	border-radius: 14px;
-	border: 1px solid #cdd9ed;
-	padding: 8px 12px;
+    color: #000000;
+    background: #f4f6f9;
+    border-radius: 14px;
+    border: 1px solid #cdd9ed;
+    padding: 8px 12px;
 }
 
 label {
-	display: inline-block;
-	margin: 0 0 -1px;
-	padding: 15px 25px;
-	font-weight: 600;
-	text-align: center;
-	color: #000000;
-	border: 1px solid transparent;
+    display: inline-block;
+    margin: 0 0 -1px;
+    padding: 15px 25px;
+    font-weight: 600;
+    text-align: center;
+    color: #000000;
+    border: 1px solid transparent;
 }
 
 label:before {
-	font-family: fontawesome;
-	font-weight: normal;
-	margin-right: 10px;
+    font-family: fontawesome;
+    font-weight: normal;
+    margin-right: 10px;
 }
 
 label[for*='1']:before { content: '\f015'; }
@@ -90,380 +90,437 @@ label[for*='3']:before { content: '\f02d'; }
 label[for*='4']:before { content: '\f05a'; }
 
 label:hover {
-	color: #888;
-	cursor: pointer;
+    color: #888;
+    cursor: pointer;
 }
 
 input:checked + label {
-	color: #d4d4d4;
-	border: 1px solid #ddd;
-	border-top: 2px solid orange;
-	border-bottom: 1px solid #fff;
+    color: #d4d4d4;
+    border: 1px solid #ddd;
+    border-top: 2px solid orange;
+    border-bottom: 1px solid #fff;
 }
 
 #tab1:checked ~ #content1,
 #tab2:checked ~ #content2,
 #tab3:checked ~ #content3,
 #tab4:checked ~ #content4 {
-	display: block;
+    display: block;
 }
 
-/* Адаптивность вкладок */
 @media screen and (max-width: 650px) {
-	label {
-		font-size: 0;
-	}
-	label:before {
-		margin: 0;
-		font-size: 18px;
-	}
-	.offer-agreement label {
-		font-size: 14px;
-	}
-	.offer-agreement label:before {
-		content: none;
-	}
+    label {
+        font-size: 0;
+    }
+    label:before {
+        margin: 0;
+        font-size: 18px;
+    }
+    .offer-agreement label {
+        font-size: 14px;
+    }
+    .offer-agreement label:before {
+        content: none;
+    }
 }
 @media screen and (max-width: 400px) {
-	label {
-		padding: 15px;
-	}
-	.offer-agreement label {
-		font-size: 13px;
-	}
+    label {
+        padding: 15px;
+    }
+    .offer-agreement label {
+        font-size: 13px;
+    }
 }
 
-/* Дашборд, личная информация */
 .dashboard {
-	background: transparent;
-	border-radius: 0;
-	padding: 0;
-	margin-top: 10px;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    margin-top: 10px;
 }
 
 .user-info {
-	background: #ffffff;
-	padding: 16px;
-	border-radius: 24px;
-	margin-bottom: 20px;
-	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-	color: #000;
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    color: #000;
 }
 .user-info p {
-	margin: 8px 0;
-	font-size: 15px;
+    margin: 8px 0;
+    font-size: 15px;
 }
 .user-info strong {
-	color: #1e6fdf;
+    color: #1e6fdf;
 }
 
 #qr-place {
-	background: #ffffff;
-	padding: 16px;
-	border-radius: 24px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	margin-top: 20px;
-	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
-/* Блоки оплаты */
 .payment-method-block {
-	background: #ffffff;
-	border-radius: 24px;
-	padding: 18px;
-	margin-top: 20px;
-	box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
-	color: #000;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 18px;
+    margin-top: 20px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+    color: #000;
 }
 .payment-method-block h3 {
-	margin: 0 0 12px 0;
-	font-size: 16px;
-	font-weight: 700;
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 700;
 }
 .payment-method-block label {
-	display: inline-block;
-	margin: 0 15px 8px 0;
-	padding: 0;
-	font-weight: normal;
-	border: none;
-	font-size: 14px;
-	background: transparent;
+    display: inline-block;
+    margin: 0 15px 8px 0;
+    padding: 0;
+    font-weight: normal;
+    border: none;
+    font-size: 14px;
+    background: transparent;
 }
 .offer-agreement {
-	margin-top: 24px;
-	padding: 16px;
-	background: #f0f4f8;
-	border-radius: 20px;
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	border: 1px solid #cdd9ed;
+    margin-top: 24px;
+    padding: 16px;
+    background: #f0f4f8;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #cdd9ed;
 }
 .offer-agreement input {
-	width: 20px;
-	height: 20px;
-	accent-color: #30a2ff;
+    width: 20px;
+    height: 20px;
+    accent-color: #30a2ff;
 }
 .offer-agreement label {
-	flex: 1;
-	cursor: pointer;
-	background: transparent;
-	border: none;
-	padding: 0;
-	font-weight: normal;
-	font-size: 14px;
+    flex: 1;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-weight: normal;
+    font-size: 14px;
 }
 .offer-link {
-	color: #2675b9;
-	text-decoration: underline;
-	font-weight: 600;
-	cursor: pointer;
+    color: #2675b9;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
 }
 
-/* ========== НОВЫЕ СТИЛИ ДЛЯ ВКЛАДКИ БАЛАНС (монохромный, современный, в стиле карточек) ========== */
+/* ========== БАЛАНС (адаптировано под Solana) ========== */
 .balance-dashboard {
-	display: flex;
-	flex-direction: column;
-	gap: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 .wallet-card {
-	background: #ffffff;
-	border-radius: 28px;
-	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-	overflow: hidden;
-	transition: all 0.2s ease;
+    background: #ffffff;
+    border-radius: 28px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.2s ease;
 }
 
 .wallet-header {
-	background: #f8fafd;
-	padding: 18px 20px;
-	border-bottom: 1px solid #eef2f6;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 12px;
+    background: #f8fafd;
+    padding: 18px 20px;
+    border-bottom: 1px solid #eef2f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .wallet-title {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	font-weight: 700;
-	font-size: 18px;
-	color: #0f2b3d;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    color: #0f2b3d;
 }
 
 .wallet-title i {
-	font-size: 24px;
-	color: #0098ea;
+    font-size: 24px;
+    color: #0098ea;
 }
 
 .connect-btn {
-	background: #0098ea;
-	border: none;
-	border-radius: 40px;
-	padding: 10px 22px;
-	color: white;
-	font-weight: 600;
-	font-size: 14px;
-	cursor: pointer;
-	transition: 0.2s;
-	font-family: inherit;
-	box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: #0098ea;
+    border: none;
+    border-radius: 40px;
+    padding: 10px 22px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: inherit;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .connect-btn:hover {
-	background: #0081cc;
-	transform: scale(0.97);
+    background: #0081cc;
+    transform: scale(0.97);
 }
 
 .disconnect-btn {
-	background: #f0f2f5;
-	color: #1f2a3a;
-	border: 1px solid #dce1e8;
+    background: #f0f2f5;
+    color: #1f2a3a;
+    border: 1px solid #dce1e8;
 }
 
 .wallet-address {
-	background: #eef2fa;
-	padding: 6px 14px;
-	border-radius: 40px;
-	font-family: monospace;
-	font-size: 13px;
-	font-weight: 500;
-	color: #1e466e;
-	word-break: break-all;
+    background: #eef2fa;
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e466e;
+    word-break: break-all;
 }
 
 .balance-grid {
-	padding: 20px;
-	display: flex;
-	flex-direction: column;
-	gap: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
 .balance-item {
-	background: #f9fbfe;
-	border-radius: 20px;
-	padding: 16px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	transition: all 0.2s;
-	border: 1px solid #ecf3f9;
+    background: #f9fbfe;
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+    border: 1px solid #ecf3f9;
 }
 
 .balance-left {
-	display: flex;
-	align-items: center;
-	gap: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 
 .balance-icon {
-	width: 44px;
-	height: 44px;
-	background: #eef2ff;
-	border-radius: 30px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 24px;
+    width: 44px;
+    height: 44px;
+    background: #eef2ff;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
 }
 
 .balance-info h4 {
-	font-size: 16px;
-	font-weight: 700;
-	margin-bottom: 4px;
-	color: #1e2f3e;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #1e2f3e;
 }
 
 .balance-info small {
-	font-size: 12px;
-	color: #6c819a;
+    font-size: 12px;
+    color: #6c819a;
 }
 
 .balance-value {
-	font-weight: 800;
-	font-size: 22px;
-	letter-spacing: -0.3px;
-	color: #0f2b3d;
-	font-family: monospace;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    color: #0f2b3d;
+    font-family: monospace;
 }
 
 .balance-value span {
-	font-size: 13px;
-	font-weight: 500;
-	color: #5f7f9e;
+    font-size: 13px;
+    font-weight: 500;
+    color: #5f7f9e;
 }
 
 .network-bar {
-	background: #ffffff;
-	border-radius: 20px;
-	padding: 12px 20px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 12px;
-	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
 }
 
 .network-buttons {
-	display: flex;
-	gap: 10px;
+    display: flex;
+    gap: 10px;
 }
 
 .network-btn {
-	background: #f0f4f8;
-	border: 1px solid #cdd9ed;
-	border-radius: 30px;
-	padding: 6px 18px;
-	font-weight: 600;
-	font-size: 13px;
-	cursor: pointer;
-	transition: 0.2s;
+    background: #f0f4f8;
+    border: 1px solid #cdd9ed;
+    border-radius: 30px;
+    padding: 6px 18px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
 .network-btn.active {
-	background: #0098ea;
-	border-color: #0098ea;
-	color: white;
+    background: #0098ea;
+    border-color: #0098ea;
+    color: white;
 }
 
 .refresh-balance {
-	background: none;
-	border: 1px solid #cdd9ed;
-	border-radius: 40px;
-	padding: 8px 18px;
-	font-size: 13px;
-	font-weight: 500;
-	cursor: pointer;
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	transition: 0.2s;
+    background: none;
+    border: 1px solid #cdd9ed;
+    border-radius: 40px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
 }
 
 .refresh-balance:hover {
-	background: #eef2fa;
+    background: #eef2fa;
 }
 
 .status-message {
-	background: #f1f5f9;
-	border-radius: 16px;
-	padding: 12px;
-	font-size: 13px;
-	color: #2c4b6e;
-	text-align: center;
+    background: #f1f5f9;
+    border-radius: 16px;
+    padding: 12px;
+    font-size: 13px;
+    color: #2c4b6e;
+    text-align: center;
 }
 
 button {
-	font-family: inherit;
+    font-family: inherit;
 }
 
-/* Модальное окно оферты */
+/* ========== МОДАЛЬНОЕ ОКНО (для настройки кошелька) ========== */
 .modal {
-	display: none;
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(0, 0, 0, 0.85);
-	z-index: 100000;
-	justify-content: center;
-	align-items: center;
-	backdrop-filter: blur(5px);
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 100000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
 }
 .modal-content {
-	background: #ffffff;
-	width: 92%;
-	max-width: 880px;
-	max-height: 85vh;
-	border-radius: 28px;
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
+    background: #ffffff;
+    width: 92%;
+    max-width: 480px;
+    max-height: 85vh;
+    border-radius: 28px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 .modal-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 16px 20px;
-	border-bottom: 1px solid #cdd9ed;
-	background: #f0f2f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #cdd9ed;
+    background: #f0f2f5;
 }
 .close-modal {
-	font-size: 28px;
-	font-weight: bold;
-	cursor: pointer;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
 }
 .modal-body {
-	padding: 20px;
-	overflow-y: auto;
-	background: #fff;
-	color: #000;
+    padding: 20px;
+    overflow-y: auto;
+    background: #fff;
+    color: #000;
+}
+
+/* Стили для ввода seed */
+#importSeedInput {
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid #cdd9ed;
+    border-radius: 14px;
+    padding: 12px;
+    width: 100%;
+    resize: vertical;
+    background: #f9fbfe;
+}
+
+#mnemonicDisplay {
+    background: #f0f4f8;
+    padding: 16px;
+    border-radius: 16px;
+    font-family: monospace;
+    font-size: 16px;
+    word-break: break-word;
+    margin: 12px 0;
+    border: 1px dashed #0098ea;
+}
+
+/* Адаптация для тёмной темы (если используется) */
+@media (prefers-color-scheme: dark) {
+    .wallet-card {
+        background: #1c1c1e;
+        color: #fff;
+    }
+    .wallet-header {
+        background: #2c2c2e;
+        border-bottom-color: #3a3a3c;
+    }
+    .balance-item {
+        background: #2c2c2e;
+        border-color: #3a3a3c;
+    }
+    .balance-info h4 { color: #eee; }
+    .balance-info small { color: #aaa; }
+    .balance-value { color: #eee; }
+    .balance-value span { color: #aaa; }
+    .modal-content { background: #1c1c1e; color: #eee; }
+    .modal-header { background: #2c2c2e; border-bottom-color: #3a3a3c; }
+    .modal-body { background: #1c1c1e; }
+    .user-info { background: #2c2c2e; color: #eee; }
+    .payment-method-block { background: #2c2c2e; color: #eee; }
+    .offer-agreement { background: #2c2c2e; border-color: #3a3a3c; color: #eee; }
+    #qr-place { background: #2c2c2e; }
+    .status-message { background: #2c2c2e; color: #ccc; }
+    .network-bar { background: #2c2c2e; }
+    .network-btn { background: #3a3a3c; border-color: #4a4a4c; color: #ccc; }
+    .network-btn.active { background: #0098ea; color: #fff; }
+    .refresh-balance { color: #ccc; border-color: #4a4a4c; }
+    .refresh-balance:hover { background: #3a3a3c; }
+    #mnemonicDisplay { background: #2c2c2e; border-color: #0098ea; }
+    #importSeedInput { background: #2c2c2e; color: #eee; border-color: #4a4a4c; }
+    .connect-btn { background: #0098ea; color: #fff; }
+    .disconnect-btn { background: #3a3a3c; color: #ccc; border-color: #4a4a4c; }
 }
