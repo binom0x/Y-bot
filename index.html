@@ -674,8 +674,6 @@
 
 <!-- ===== СКРИПТЫ ===== -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-
-<!-- script src="solana-web3.min.js"></script -->
 <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.0/lib/index.iife.min.js"></script>
 
 <script>
@@ -993,7 +991,8 @@
                 return;
             }
             try {
-                const connection = new solana.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+                // Используем публичный RPC от Ankr – работает без ключа
+                const connection = new solana.Connection('https://rpc.ankr.com/solana', 'confirmed');
                 const balance = await connection.getBalance(solanaKeypair.publicKey);
                 const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
                 solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
@@ -1003,7 +1002,7 @@
                 console.error('Ошибка получения баланса:', err);
                 solBalanceEl.innerHTML = `⚠️ <span>SOL</span>`;
                 userSolBalance.textContent = '?';
-                walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}`;
+                walletStatusMsg.innerHTML = `❌ Ошибка: ${err.message}. Попробуйте другой RPC или проверьте сеть.`;
             }
             ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
         }
@@ -1027,7 +1026,6 @@
         document.getElementById('btnCreateWallet').addEventListener('click', () => {
             const newKeypair = generateNewWallet();
             const publicKey = newKeypair.publicKey.toBase58();
-            // Кодируем приватный ключ в base64 без Buffer
             const privateKey = arrayToBase64(newKeypair.secretKey);
             newPublicKey.textContent = publicKey;
             newPrivateKey.textContent = privateKey;
@@ -1099,7 +1097,6 @@
     if (typeof solana !== 'undefined' && window.startApp) {
         window.startApp();
     } else {
-        // Ожидание загрузки библиотеки
         const checkInterval = setInterval(() => {
             if (typeof solana !== 'undefined' && window.startApp) {
                 window.startApp();
@@ -1110,7 +1107,7 @@
             clearInterval(checkInterval);
             const msg = document.getElementById('walletStatusMsg');
             if (msg && typeof solana === 'undefined') {
-                msg.innerHTML = '❌ Библиотека Solana не загружена. Убедитесь, что файл solana-web3.min.js находится в той же папке.';
+                msg.innerHTML = '❌ Библиотека Solana не загружена. Проверьте интернет.';
             }
         }, 5000);
     }
