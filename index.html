@@ -940,6 +940,7 @@
             return solana.Keypair.generate();
         }
 
+        // ---------- ИЗМЕНЁННАЯ ФУНКЦИЯ setWallet ----------
         function setWallet(keypair) {
             solanaKeypair = keypair;
             walletAddress = keypair.publicKey.toBase58();
@@ -952,9 +953,12 @@
             `;
             document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
 
-            walletStatusMsg.innerHTML = `✅ Кошелёк подключён: ${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}`;
+            // Показываем индикатор загрузки вместо 0.00
+            walletStatusMsg.innerHTML = '⏳ Загрузка баланса...';
+            solBalanceEl.innerHTML = `<span style="color: #888;">⏳ Загрузка...</span>`;
+            userSolBalance.textContent = '...';
             updateQRCode();
-            fetchBalance();
+            fetchBalance(); // здесь обновится с реальным балансом
             walletSetupModal.style.display = 'none';
         }
 
@@ -979,19 +983,22 @@
             walletSetupModal.style.display = 'flex';
         }
 
-        // ========== ОБНОВЛЁННАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ БАЛАНСА ==========
+        // ---------- ИЗМЕНЁННАЯ ФУНКЦИЯ fetchBalance ----------
         async function fetchBalance() {
             if (!walletConnected || !solanaKeypair) {
                 walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
                 return;
             }
 
-            // Проверенные публичные RPC (работают без ключа на 2025 год)
+            // Сразу показываем индикатор загрузки, если ещё не показан
+            solBalanceEl.innerHTML = `<span style="color: #888;">⏳ Загрузка...</span>`;
+            userSolBalance.textContent = '...';
+
             const rpcEndpoints = [
                 'https://solana.publicnode.com',
                 'https://rpc.helium.io',
                 'https://solana-api.projectserum.com',
-                'https://api.mainnet-beta.solana.com' // fallback
+                'https://api.mainnet-beta.solana.com'
             ];
 
             let lastError = null;
