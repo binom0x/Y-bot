@@ -754,7 +754,6 @@
         const ydBalanceEl = document.getElementById('yd-balance');
         const walletStatusMsg = document.getElementById('walletStatusMsg');
         const refreshBalanceBtn = document.getElementById('refreshBalanceBtn');
-        const disconnectBtnMain = document.getElementById('disconnectWalletBtnMain');
         const buyCardBtn = document.getElementById('buyCardBtn');
         const buyMbaBtn = document.getElementById('buyMbaBtn');
 
@@ -1149,8 +1148,6 @@
             if (walletConnected) fetchBalance();
             else walletStatusMsg.innerHTML = 'Подключите кошелёк для обновления баланса.';
         });
-
-        disconnectBtnMain.addEventListener('click', disconnectWallet);
 
         initWallet();
     };
