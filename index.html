@@ -531,7 +531,6 @@
     <input id="tab4" type="radio" name="tabs" />
     <label for="tab4">Баланс</label>
 
-    <!-- Секция 1: Данные -->
     <section id="content1">
         <div class="dashboard">
             <div class="user-info">
@@ -546,7 +545,6 @@
         </div>
     </section>
 
-    <!-- Секция 2: Y-Карта -->
     <section id="content2">
         <h2>Y-Карта</h2>
         <p><select id="card_programs" name="Y-card"><option value="">Выберите...</option></select></p>
@@ -562,7 +560,6 @@
         <button id="buyCardBtn" class="connect-btn" style="width:100%; margin-top: 20px;">Купить</button>
     </section>
 
-    <!-- Секция 3: Y-MBA -->
     <section id="content3">
         <h2>Y-MBA</h2>
         <p><select id="Y_cources" name="Y-MBA"><option value="">Выберите...</option></select></p>
@@ -578,7 +575,6 @@
         <button id="buyMbaBtn" class="connect-btn" style="width:100%; margin-top: 20px;">Купить</button>
     </section>
 
-    <!-- Секция 4: Баланс -->
     <section id="content4">
         <div class="balance-dashboard">
             <div class="wallet-card">
@@ -635,7 +631,6 @@
                     <button id="btnImportWallet" class="connect-btn" style="width:100%; background: #6c819a;">🔑 Импортировать существующий</button>
                 </div>
             </div>
-            <!-- Шаг 2a: создание -->
             <div id="step2create" style="display: none;">
                 <p><strong>Ваш новый кошелёк создан!</strong></p>
                 <p><strong>Публичный адрес:</strong><br><span id="newPublicKey" style="font-family: monospace; word-break: break-all; background: #f0f4f8; padding: 8px; border-radius: 8px; display: block;"></span></p>
@@ -647,7 +642,6 @@
                     <button id="btnBackFromCreate" class="connect-btn" style="flex:1; background: #aaa;">Назад</button>
                 </div>
             </div>
-            <!-- Шаг 2b: импорт -->
             <div id="step2import" style="display: none;">
                 <p>Введите ваш приватный ключ (base64):</p>
                 <input id="importPrivateKey" type="text" placeholder="Вставьте приватный ключ" />
@@ -714,21 +708,18 @@
     //  ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ
     // ========================================================================
     window.startApp = function() {
-        // Защита от повторного запуска
         if (appStarted) {
             console.log('Приложение уже запущено, повторный запуск отменён.');
             return;
         }
         appStarted = true;
 
-        // Проверяем, загружена ли библиотека
         if (typeof solana === 'undefined') {
             const msg = document.getElementById('walletStatusMsg');
             if (msg) msg.innerHTML = '❌ Библиотека Solana не загружена. Проверьте интернет.';
             return;
         }
 
-        // ---------- Глобальные переменные ----------
         let c_programs = [];
         let y_cources = [];
         let selectedProduct = null;
@@ -738,7 +729,6 @@
         let walletConnected = false;
         let walletAddress = '';
 
-        // DOM-элементы
         const walletSetupModal = document.getElementById('walletSetupModal');
         const step1 = document.getElementById('step1');
         const step2create = document.getElementById('step2create');
@@ -759,7 +749,6 @@
         const buyCardBtn = document.getElementById('buyCardBtn');
         const buyMbaBtn = document.getElementById('buyMbaBtn');
 
-        // ---------- QR ----------
         function displayQRCode(container, text, size = 180, color = '#000000', margin = 2) {
             const target = typeof container === 'string' ? document.querySelector(container) : container;
             if (!target) return;
@@ -783,7 +772,6 @@
             }
         }
 
-        // ---------- Загрузка каталога ----------
         fetch('content.json')
             .then(r => r.json())
             .then(data => {
@@ -806,7 +794,6 @@
             })
             .catch(err => console.error('Ошибка загрузки каталога:', err));
 
-        // ---------- Оферты ----------
         function loadOfferByType(type) {
             if (cachedOffers[type]) return Promise.resolve(cachedOffers[type]);
             const fileName = type === 'card' ? 'offer_card.html' : 'offer_mba.html';
@@ -845,7 +832,6 @@
             if (event.target === document.getElementById('offerModal')) closeOfferModal();
         };
 
-        // ---------- Выбор продукта ----------
         function updateSelectedProgram() {
             const select = document.getElementById('card_programs');
             const idx = select.selectedIndex;
@@ -875,7 +861,6 @@
         document.getElementById('card_programs')?.addEventListener('change', updateSelectedProgram);
         document.getElementById('Y_cources')?.addEventListener('change', updateSelectedCource);
 
-        // ---------- Покупка ----------
         function purchaseProduct(productType) {
             if (!walletConnected) {
                 alert('Сначала подключите кошелёк.');
@@ -930,7 +915,6 @@
         buyCardBtn.addEventListener('click', () => purchaseProduct('card'));
         buyMbaBtn.addEventListener('click', () => purchaseProduct('mba'));
 
-        // ---------- SOLANA WALLET ----------
         function savePrivateKey(privateKey) {
             localStorage.setItem('solana_private_key', privateKey);
         }
@@ -995,25 +979,26 @@
             walletSetupModal.style.display = 'flex';
         }
 
-        // ---------- ФУНКЦИЯ ПОЛУЧЕНИЯ БАЛАНСА С FALLBACK ----------
+        // ========== ОБНОВЛЁННАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ БАЛАНСА ==========
         async function fetchBalance() {
             if (!walletConnected || !solanaKeypair) {
                 walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
                 return;
             }
 
-            // Проверенные публичные RPC (без ключа)
+            // Проверенные публичные RPC (работают без ключа на 2025 год)
             const rpcEndpoints = [
-                'https://api.mainnet-beta.solana.com',
+                'https://solana.publicnode.com',
+                'https://rpc.helium.io',
                 'https://solana-api.projectserum.com',
-                'https://rpc.triton.one/solana'
+                'https://api.mainnet-beta.solana.com' // fallback
             ];
 
             let lastError = null;
             for (const endpoint of rpcEndpoints) {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
                     const connection = new solana.Connection(endpoint, {
                         commitment: 'confirmed',
@@ -1063,7 +1048,6 @@
             updateQRCode();
         }
 
-        // ---------- Обработчики ----------
         document.getElementById('btnCreateWallet').addEventListener('click', () => {
             const newKeypair = generateNewWallet();
             const publicKey = newKeypair.publicKey.toBase58();
@@ -1130,12 +1114,11 @@
 
         disconnectBtnMain.addEventListener('click', disconnectWallet);
 
-        // ---------- Запуск ----------
         initWallet();
     };
 
     // ========================================================================
-    //  ЗАПУСК ПРИЛОЖЕНИЯ (с защитой от двойного вызова)
+    //  ЗАПУСК ПРИЛОЖЕНИЯ
     // ========================================================================
     if (typeof solana !== 'undefined' && window.startApp) {
         window.startApp();
