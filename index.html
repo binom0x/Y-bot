@@ -539,9 +539,6 @@
                 <p><strong>Баланс SOL:</strong> <span id="user-sol-balance">0.00</span></p>
             </div>
             <div id="qr-place"></div>
-            <div style="margin-top: 20px; text-align: center;">
-                <button id="disconnectWalletBtnMain" class="connect-btn disconnect-btn" style="width: 100%;">🔌 Отключить кошелёк</button>
-            </div>
         </div>
     </section>
 
@@ -577,6 +574,15 @@
 
     <section id="content4">
         <div class="balance-dashboard">
+            <!-- ===== ДОБАВЛЕН ПЕРЕКЛЮЧАТЕЛЬ СЕТИ ===== -->
+            <div class="network-bar">
+                <span>🌐 Сеть:</span>
+                <div class="network-buttons">
+                    <button class="network-btn active" data-network="mainnet">Mainnet</button>
+                    <button class="network-btn" data-network="devnet">Devnet</button>
+                </div>
+            </div>
+
             <div class="wallet-card">
                 <div class="wallet-header">
                     <div class="wallet-title">
@@ -728,6 +734,9 @@
         let solanaKeypair = null;
         let walletConnected = false;
         let walletAddress = '';
+
+        // ===== ДОБАВЛЕНА ПЕРЕМЕННАЯ ДЛЯ ТЕКУЩЕЙ СЕТИ =====
+        let currentNetwork = 'mainnet'; // 'mainnet' или 'devnet'
 
         const walletSetupModal = document.getElementById('walletSetupModal');
         const step1 = document.getElementById('step1');
@@ -940,7 +949,6 @@
             return solana.Keypair.generate();
         }
 
-        // ---------- ИЗМЕНЁННАЯ ФУНКЦИЯ setWallet ----------
         function setWallet(keypair) {
             solanaKeypair = keypair;
             walletAddress = keypair.publicKey.toBase58();
@@ -953,12 +961,11 @@
             `;
             document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
 
-            // Показываем индикатор загрузки вместо 0.00
             walletStatusMsg.innerHTML = '⏳ Загрузка баланса...';
             solBalanceEl.innerHTML = `<span style="color: #888;">⏳ Загрузка...</span>`;
             userSolBalance.textContent = '...';
             updateQRCode();
-            fetchBalance(); // здесь обновится с реальным балансом
+            fetchBalance();
             walletSetupModal.style.display = 'none';
         }
 
@@ -983,25 +990,33 @@
             walletSetupModal.style.display = 'flex';
         }
 
-        // ---------- ИЗМЕНЁННАЯ ФУНКЦИЯ fetchBalance ----------
+        // ===== ИЗМЕНЕНА ФУНКЦИЯ fetchBalance (учёт сети) =====
         async function fetchBalance() {
             if (!walletConnected || !solanaKeypair) {
                 walletStatusMsg.innerHTML = 'Подключите кошелёк для просмотра баланса.';
                 return;
             }
 
-            // Сразу показываем индикатор загрузки, если ещё не показан
             solBalanceEl.innerHTML = `<span style="color: #888;">⏳ Загрузка...</span>`;
             userSolBalance.textContent = '...';
 
-            const rpcEndpoints = [
-                'https://solana.publicnode.com',
-                'https://rpc.helium.io',
-                'https://solana-api.projectserum.com',
-                'https://api.mainnet-beta.solana.com'
-            ];
+            // Выбор RPC в зависимости от сети
+            const endpoints = {
+                mainnet: [
+                    'https://solana.publicnode.com',
+                    'https://rpc.helium.io',
+                    'https://solana-api.projectserum.com',
+                    'https://api.mainnet-beta.solana.com'
+                ],
+                devnet: [
+                    'https://api.devnet.solana.com',
+                    'https://devnet.solana.com'
+                ]
+            };
 
+            const rpcEndpoints = endpoints[currentNetwork] || endpoints.mainnet;
             let lastError = null;
+
             for (const endpoint of rpcEndpoints) {
                 try {
                     const controller = new AbortController();
@@ -1024,7 +1039,8 @@
                     const solBalance = (balance / solana.LAMPORTS_PER_SOL).toFixed(4);
                     solBalanceEl.innerHTML = `${solBalance} <span>SOL</span>`;
                     userSolBalance.textContent = solBalance;
-                    walletStatusMsg.innerHTML = `✅ Баланс SOL: ${solBalance}`;
+                    const networkName = currentNetwork === 'mainnet' ? 'Mainnet' : 'Devnet';
+                    walletStatusMsg.innerHTML = `✅ Баланс SOL (${networkName}): ${solBalance}`;
                     ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
                     return;
                 } catch (err) {
@@ -1039,6 +1055,21 @@
             walletStatusMsg.innerHTML = `❌ Ошибка: не удалось получить баланс. Проверьте интернет или попробуйте позже.`;
             ydBalanceEl.innerHTML = `0.00 <span>Y-D</span>`;
         }
+
+        // ===== ОБРАБОТЧИКИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ СЕТИ =====
+        document.querySelectorAll('.network-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.network-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentNetwork = this.dataset.network;
+                if (walletConnected) {
+                    fetchBalance();
+                } else {
+                    const networkName = currentNetwork === 'mainnet' ? 'Mainnet' : 'Devnet';
+                    walletStatusMsg.innerHTML = `🌐 Сеть ${networkName}. Подключите кошелёк.`;
+                }
+            });
+        });
 
         function initWallet() {
             const savedPrivateKey = loadPrivateKey();
